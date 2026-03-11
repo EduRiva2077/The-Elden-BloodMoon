@@ -4,11 +4,14 @@ import { GmPanelComponent } from '../gm-panel/gm-panel.component';
 import { RightPanelComponent } from '../right-panel/right-panel.component';
 import { BottomBarComponent } from '../bottom-bar/bottom-bar.component';
 import { AuthService } from '../../services/auth.service';
+import { CombatService } from '../../services/combat.service';
+import { MatIconModule } from '@angular/material/icon';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [GridComponent, GmPanelComponent, RightPanelComponent, BottomBarComponent],
+  imports: [GridComponent, GmPanelComponent, RightPanelComponent, BottomBarComponent, MatIconModule, CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-col h-screen w-screen overflow-hidden bg-black text-stone-200 font-sans">
@@ -17,7 +20,7 @@ import { AuthService } from '../../services/auth.service';
       <div class="flex flex-1 overflow-hidden relative">
         
         <!-- Left Panel (GM Only) -->
-        @if (auth.currentUser()?.role === 'GM') {
+        @if (auth.currentUser()?.role === 'GM' && combat.uiVisible()) {
           <app-gm-panel class="z-20 shadow-2xl"></app-gm-panel>
         }
 
@@ -27,7 +30,9 @@ import { AuthService } from '../../services/auth.service';
         </div>
 
         <!-- Right Panel (Chat/Abilities) -->
-        <app-right-panel class="z-20 shadow-2xl"></app-right-panel>
+        @if (combat.uiVisible()) {
+          <app-right-panel class="z-20 shadow-2xl"></app-right-panel>
+        }
 
       </div>
 
@@ -38,4 +43,5 @@ import { AuthService } from '../../services/auth.service';
 })
 export class LayoutComponent {
   auth = inject(AuthService);
+  combat = inject(CombatService);
 }

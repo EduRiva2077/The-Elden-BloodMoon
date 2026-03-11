@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, signal, computed, inject, ViewChild, ElementRef } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed, inject, ViewChild, ElementRef } from '@angular/core';
 import { CdkDragEnd, DragDropModule } from '@angular/cdk/drag-drop';
 import { DndMathService } from '../../services/dnd-math.service';
 import { AuthService } from '../../services/auth.service';
@@ -18,21 +18,28 @@ import { Ability } from '../../models/ability';
         Distance to origin: {{ distanceToOrigin() }} m
       </div>
       
-      <div class="relative overflow-auto flex-1 cursor-crosshair" #gridContainer
+      <div class="relative overflow-auto flex-1 cursor-crosshair bg-stone-900" #gridContainer
            tabindex="0"
            (mousemove)="onMouseMove($event)"
-           (click)="onClick()"
+           (click)="onClick($event)"
            (keydown.enter)="onClick()">
         
-        <!-- Grid Background -->
-        <div class="absolute inset-0 pointer-events-none opacity-20"
-             [style.backgroundSize]="gridSize + 'px ' + gridSize + 'px'"
-             style="background-image: linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px);">
-        </div>
+        <div class="relative w-full h-full" #boundary>
+          <!-- Map Background Image -->
+          @if (mapBackgroundImage()) {
+            <img [src]="mapBackgroundImage()" class="absolute inset-0 w-full h-full object-cover pointer-events-none z-0 opacity-80" alt="Map Background" referrerpolicy="no-referrer" />
+          } @else {
+            <div class="absolute inset-0 w-full h-full bg-stone-800"></div>
+          }
 
-        <!-- Tokens -->
-        <div class="relative w-[3000px] h-[3000px]">
-          
+          <!-- Grid Background -->
+          @if (showGrid()) {
+            <div class="absolute inset-0 pointer-events-none opacity-20 z-10"
+                 [style.backgroundSize]="gridSize + 'px ' + gridSize + 'px'"
+                 style="background-image: linear-gradient(to right, #ffffff 1px, transparent 1px), linear-gradient(to bottom, #ffffff 1px, transparent 1px);">
+            </div>
+          }
+
           <!-- Area Preview SVG -->
           @if (previewAbility()) {
             <svg class="absolute inset-0 w-full h-full pointer-events-none z-20">
@@ -40,22 +47,52 @@ import { Ability } from '../../models/ability';
             </svg>
           }
 
+          <!-- Measure Line -->
+          @if (combat.isMeasuring() && combat.measureStart() && combat.measureCurrent()) {
+            <svg class="absolute inset-0 w-full h-full pointer-events-none z-40">
+              <line 
+                [attr.x1]="combat.measureStart()!.x" 
+                [attr.y1]="combat.measureStart()!.y" 
+                [attr.x2]="combat.measureCurrent()!.x" 
+                [attr.y2]="combat.measureCurrent()!.y" 
+                stroke="#f59e0b" stroke-width="2" stroke-dasharray="5,5" />
+              <circle [attr.cx]="combat.measureStart()!.x" [attr.cy]="combat.measureStart()!.y" r="4" fill="#f59e0b" />
+              <circle [attr.cx]="combat.measureCurrent()!.x" [attr.cy]="combat.measureCurrent()!.y" r="4" fill="#f59e0b" />
+            </svg>
+            
+            <!-- Distance Label -->
+            <div class="absolute z-50 bg-stone-900/90 text-amber-500 text-xs font-bold px-2 py-1 rounded border border-amber-500/50 pointer-events-none transform -translate-x-1/2 -translate-y-full mt-[-10px]"
+                 [style.left.px]="combat.measureCurrent()!.x"
+                 [style.top.px]="combat.measureCurrent()!.y">
+              {{ measureDistance() }}m
+            </div>
+          }
+
           @for (token of tokens(); track token.id) {
-            <div class="absolute rounded-full shadow-lg border-2 flex flex-col items-center justify-center transition-shadow hover:shadow-amber-500/50 z-10 group"
+            <div class="absolute top-0 left-0 rounded-full shadow-lg border-2 flex flex-col items-center justify-center transition-shadow hover:shadow-amber-500/50 z-30 group"
+                 tabindex="0"
                  [class.cursor-grab]="canMove(token)"
                  [class.active:cursor-grabbing]="canMove(token)"
                  [class.cursor-not-allowed]="!canMove(token)"
-                 [class.border-amber-500]="token.controlledBy === currentUser()?.id && !isAffected(token)"
-                 [class.border-stone-400]="token.controlledBy !== currentUser()?.id && !isAffected(token)"
+                 [class.border-yellow-400]="token.type === 'player' && !isAffected(token) && selectedTokenId() !== token.id"
+                 [class.border-red-500]="token.type === 'enemy' && !isAffected(token) && selectedTokenId() !== token.id"
+                 [class.border-blue-500]="token.type === 'npc' && !isAffected(token) && selectedTokenId() !== token.id"
+                 [class.border-black]="token.type === 'boss' && !isAffected(token) && selectedTokenId() !== token.id"
+                 [class.border-stone-400]="!token.type && !isAffected(token) && selectedTokenId() !== token.id"
                  [class.!border-red-500]="isAffected(token)"
+                 [class.!border-white]="selectedTokenId() === token.id && !isAffected(token)"
+                 [class.shadow-[0_0_15px_rgba(255,255,255,0.8)]]="selectedTokenId() === token.id && !isAffected(token)"
                  [class.shadow-[0_0_15px_rgba(239,68,68,0.8)]]="isAffected(token)"
                  [style.backgroundColor]="token.color"
                  [style.width.px]="gridSize"
                  [style.height.px]="gridSize"
-                 [style.transform]="'translate3d(' + (token.x * gridSize) + 'px, ' + (token.y * gridSize) + 'px, 0)'"
+                 [cdkDragFreeDragPosition]="{x: token.x * gridSize, y: token.y * gridSize}"
                  cdkDrag
+                 [cdkDragBoundary]="boundary"
                  [cdkDragDisabled]="!canMove(token)"
-                 (cdkDragEnded)="onDragEnded($event, token)">
+                 (cdkDragEnded)="onDragEnded($event, token)"
+                 (click)="onTokenClick(token, $event)"
+                 (keydown.enter)="onTokenClick(token, $event)">
               
               <!-- Token Image or Initials -->
               @if (token.imageUrl) {
@@ -97,23 +134,34 @@ import { Ability } from '../../models/ability';
 export class GridComponent {
   private mathService = inject(DndMathService);
   private authService = inject(AuthService);
-  private combat = inject(CombatService);
+  combat = inject(CombatService);
   
   @ViewChild('gridContainer') gridContainer!: ElementRef<HTMLDivElement>;
+  @ViewChild('boundary') boundary!: ElementRef<HTMLDivElement>;
 
   readonly gridSize = 64; // 1 Grid Unit = 1.5m = 64px
   
   currentUser = this.authService.currentUser;
   previewAbility = this.combat.previewAbility;
+  mapBackgroundImage = this.combat.mapBackgroundImage;
+  selectedTokenId = this.combat.selectedTokenId;
+  showGrid = this.combat.showGrid;
 
   // State
-  tokens = signal<Token[]>([
-    { id: 't1', name: 'Fighter Bob', x: 2, y: 2, hp: 45, maxHp: 45, conditions: [], controlledBy: 'user_player_1', color: '#ef4444' },
-    { id: 't2', name: 'Wizard Alice', x: 4, y: 5, hp: 22, maxHp: 22, conditions: ['Mage Armor'], controlledBy: 'user_player_2', color: '#3b82f6' },
-    { id: 't3', name: 'Goblin Boss', x: 8, y: 3, hp: 15, maxHp: 25, conditions: ['Poisoned'], controlledBy: 'user_gm_1', color: '#22c55e', imageUrl: 'https://picsum.photos/seed/goblin/128/128' },
-    { id: 't4', name: 'Goblin Minion', x: 9, y: 4, hp: 7, maxHp: 7, conditions: [], controlledBy: 'user_gm_1', color: '#22c55e' },
-    { id: 't5', name: 'Goblin Minion', x: 7, y: 4, hp: 7, maxHp: 7, conditions: [], controlledBy: 'user_gm_1', color: '#22c55e' },
-  ]);
+  tokens = this.combat.tokens;
+
+  measureDistance = computed(() => {
+    const start = this.combat.measureStart();
+    const current = this.combat.measureCurrent();
+    if (!start || !current) return 0;
+    
+    const dx = current.x - start.x;
+    const dy = current.y - start.y;
+    const distPixels = Math.hypot(dx, dy);
+    const distMeters = (distPixels / this.gridSize) * 1.5;
+    
+    return Math.round(distMeters * 10) / 10;
+  });
 
   distanceToOrigin = computed(() => {
     const t1 = this.tokens().find(t => t.id === 't1');
@@ -278,7 +326,7 @@ export class GridComponent {
   }
 
   onMouseMove(event: MouseEvent) {
-    if (!this.combat.previewAbility() || !this.gridContainer) return;
+    if (!this.gridContainer) return;
     
     const rect = this.gridContainer.nativeElement.getBoundingClientRect();
     const scrollLeft = this.gridContainer.nativeElement.scrollLeft;
@@ -287,31 +335,110 @@ export class GridComponent {
     const x = event.clientX - rect.left + scrollLeft;
     const y = event.clientY - rect.top + scrollTop;
     
-    this.combat.updateTarget(x, y);
+    if (this.combat.isMeasuring() && this.combat.measureStart()) {
+      this.combat.measureCurrent.set({x, y});
+    }
+
+    if (this.combat.previewAbility()) {
+      this.combat.updateTarget(x, y);
+    }
   }
 
-  onClick() {
+  onClick(event?: MouseEvent) {
+    if (this.combat.isMeasuring()) {
+      if (!this.combat.measureStart()) {
+        if (event && this.gridContainer) {
+          const rect = this.gridContainer.nativeElement.getBoundingClientRect();
+          const scrollLeft = this.gridContainer.nativeElement.scrollLeft;
+          const scrollTop = this.gridContainer.nativeElement.scrollTop;
+          const x = event.clientX - rect.left + scrollLeft;
+          const y = event.clientY - rect.top + scrollTop;
+          this.combat.measureStart.set({x, y});
+          this.combat.measureCurrent.set({x, y});
+        }
+      } else {
+        this.combat.measureStart.set(null);
+        this.combat.measureCurrent.set(null);
+      }
+      return;
+    }
+
     const ability = this.combat.previewAbility();
-    if (ability) {
-      const affected = this.affectedTokens();
+    const originPos = this.combat.previewOrigin();
+    
+    if (ability && originPos) {
+      // Find the token that is using the ability (the origin)
+      const originToken = this.tokens().find(t => t.x === originPos.x && t.y === originPos.y);
+      
+      // Filter out the origin token from the affected tokens
+      const affected = this.affectedTokens().filter(t => t.id !== originToken?.id);
+      
       console.log(`Confirmed attack: ${ability.name}`);
       console.log(`Affected tokens:`, affected.map(t => t.name));
       
-      // Apply damage (mock)
-      const damageRoll = this.mathService.rollDice(6, 8); // Mocking 8d6
+      // Parse damage string (e.g., "1d8+3" or "8d6")
+      let damageRoll = 0;
+      const damageMatch = ability.damage.match(/(\d+)d(\d+)(?:\+(\d+))?/);
+      if (damageMatch) {
+        const count = parseInt(damageMatch[1], 10);
+        const sides = parseInt(damageMatch[2], 10);
+        const bonus = damageMatch[3] ? parseInt(damageMatch[3], 10) : 0;
+        damageRoll = this.mathService.rollDice(sides, count) + bonus;
+      } else {
+        damageRoll = parseInt(ability.damage, 10) || 0; // Fallback to flat damage
+      }
+      
       console.log(`Rolled ${damageRoll} ${ability.damageType} damage!`);
       
-      this.tokens.update(tokens => 
-        tokens.map(t => {
-          if (affected.find(a => a.id === t.id)) {
-            return { ...t, hp: Math.max(0, t.hp - damageRoll) };
+      affected.forEach(t => {
+        let hit = true;
+        
+        if (ability.requiresAttackRoll && t.sheet) {
+          const attackRoll = this.mathService.rollDice(20) + (ability.attackBonus || 0);
+          console.log(`Attack roll against ${t.name}: ${attackRoll} vs AC ${t.sheet.ac}`);
+          if (attackRoll < t.sheet.ac) {
+            hit = false;
+            console.log(`Missed ${t.name}!`);
+          } else {
+            console.log(`Hit ${t.name}!`);
           }
-          return t;
-        })
-      );
+        }
+        
+        if (hit) {
+          this.combat.updateToken(t.id, { hp: Math.max(0, t.hp - damageRoll) });
+        }
+      });
       
       this.combat.cancelPreview();
+    } else {
+      // If clicking on empty grid, deselect token
+      this.combat.selectToken('');
     }
+  }
+
+  onTokenClick(token: Token, event: Event) {
+    if (this.combat.isMeasuring()) {
+      const x = (token.x + 0.5) * this.gridSize;
+      const y = (token.y + 0.5) * this.gridSize;
+      
+      if (!this.combat.measureStart()) {
+        this.combat.measureStart.set({x, y});
+        this.combat.measureCurrent.set({x, y});
+      } else {
+        this.combat.measureCurrent.set({x, y});
+        this.combat.measureStart.set(null);
+        this.combat.measureCurrent.set(null);
+      }
+      event.stopPropagation();
+      return;
+    }
+
+    if (this.combat.previewAbility()) {
+      // If in preview mode, let the grid handle the click
+      return;
+    }
+    event.stopPropagation();
+    this.combat.selectToken(token.id);
   }
 
   onDragEnded(event: CdkDragEnd, token: Token) {
@@ -321,21 +448,28 @@ export class GridComponent {
     }
 
     const dropPoint = event.source.getFreeDragPosition();
-    const currentPixelX = (token.x * this.gridSize) + dropPoint.x;
-    const currentPixelY = (token.y * this.gridSize) + dropPoint.y;
+    const currentPixelX = dropPoint.x;
+    const currentPixelY = dropPoint.y;
     
-    const newGridX = Math.round(currentPixelX / this.gridSize);
-    const newGridY = Math.round(currentPixelY / this.gridSize);
+    let newGridX = Math.round(currentPixelX / this.gridSize);
+    let newGridY = Math.round(currentPixelY / this.gridSize);
     
+    if (this.boundary) {
+      const rect = this.boundary.nativeElement.getBoundingClientRect();
+      const maxGridX = Math.max(0, Math.floor(rect.width / this.gridSize) - 1);
+      const maxGridY = Math.max(0, Math.floor(rect.height / this.gridSize) - 1);
+      
+      newGridX = Math.max(0, Math.min(newGridX, maxGridX));
+      newGridY = Math.max(0, Math.min(newGridY, maxGridY));
+    } else {
+      newGridX = Math.max(0, newGridX);
+      newGridY = Math.max(0, newGridY);
+    }
+    
+    // Reset the drag position so it can be controlled by the bound cdkDragFreeDragPosition
     event.source.reset();
     
-    this.tokens.update(tokens => 
-      tokens.map(t => 
-        t.id === token.id 
-          ? { ...t, x: Math.max(0, newGridX), y: Math.max(0, newGridY) } 
-          : t
-      )
-    );
+    this.combat.updateToken(token.id, { x: newGridX, y: newGridY });
     
     this.syncToFirestore(token.id, newGridX, newGridY);
   }

@@ -6,8 +6,29 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import {join} from 'node:path';
+import multer from 'multer';
+import fs from 'node:fs';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
+const uploadsFolder = join(process.cwd(), 'uploads');
+
+// Ensure uploads directory exists
+if (!fs.existsSync(uploadsFolder)) {
+  fs.mkdirSync(uploadsFolder, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, uploadsFolder);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = file.originalname.split('.').pop();
+    cb(null, file.fieldname + '-' + uniqueSuffix + '.' + ext);
+  }
+});
+
+const upload = multer({ storage: storage });
 
 const app = express();
 const angularApp = new AngularNodeAppEngine();
@@ -15,14 +36,22 @@ const angularApp = new AngularNodeAppEngine();
 /**
  * Example Express Rest API endpoints can be defined here.
  * Uncomment and define endpoints as necessary.
- *
- * Example:
- * ```ts
- * app.get('/api/{*splat}', (req, res) => {
- *   // Handle API request
- * });
- * ```
  */
+
+// Serve uploaded images
+app.use('/api/uploads', express.static(uploadsFolder));
+
+// Upload endpoint
+app.post('/api/upload', upload.single('image'), (req, res) => {
+  if (!req.file) {
+    res.status(400).json({ error: 'No file uploaded' });
+    return;
+  }
+  
+  // Return the URL to access the uploaded file
+  const fileUrl = `/api/uploads/${req.file.filename}`;
+  res.json({ url: fileUrl });
+});
 
 /**
  * Serve static files from /browser

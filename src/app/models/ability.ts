@@ -13,4 +13,7 @@ export interface Ability {
   damage: string; // e.g., "8d6"
   damageType: string;
   description: string;
+  
+  requiresAttackRoll?: boolean; // true if it targets AC
+  attackBonus?: number; // e.g., +5 to hit
 }
