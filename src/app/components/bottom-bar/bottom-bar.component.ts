@@ -19,7 +19,7 @@ import { MatIconModule } from '@angular/material/icon';
           BD
         </div>
         <div class="flex flex-col">
-          <span class="text-sm font-bold text-stone-200">BloodDragons 1.0</span>
+          <span class="text-sm font-bold text-stone-200"><span class="text-red-600">Blood</span>Dragons 1.1</span>
           <span class="text-[10px] font-mono text-amber-500">{{ currentUser()?.role }}</span>
         </div>
       </div>
@@ -144,6 +144,22 @@ import { MatIconModule } from '@angular/material/icon';
           <mat-icon style="font-size: 20px; width: 20px; height: 20px;">assignment_ind</mat-icon>
         </button>
         <div class="w-px h-6 bg-stone-700 mx-1 self-center"></div>
+        
+        @if (currentUser()?.role === 'GM') {
+          <button class="relative w-10 h-10 rounded-full bg-stone-800 border border-stone-700 text-stone-400 flex items-center justify-center hover:bg-stone-700 hover:text-amber-500 hover:border-amber-500/50 transition-all" 
+                  [class.text-amber-500]="combat.showStorySlides()"
+                  [class.border-amber-500]="combat.showStorySlides()"
+                  [class.bg-amber-500/10]="combat.showStorySlides()"
+                  [class.shadow-[0_0_15px_rgba(245,158,11,0.2)]]="combat.showStorySlides()"
+                  (click)="combat.showStorySlides.set(!combat.showStorySlides())"
+                  title="Toggle Story Slides">
+            <mat-icon style="font-size: 20px; width: 20px; height: 20px;">photo_library</mat-icon>
+            @if (combat.showStorySlides()) {
+              <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-amber-500 rounded-full border-2 border-stone-900 animate-pulse"></span>
+            }
+          </button>
+        }
+
         <button class="w-10 h-10 rounded-full bg-stone-800 border border-stone-700 text-stone-400 flex items-center justify-center hover:bg-stone-700 hover:text-amber-500 hover:border-amber-500/50 transition-all" 
                 [class.text-amber-500]="combat.showGrid()"
                 [class.border-amber-500]="combat.showGrid()"

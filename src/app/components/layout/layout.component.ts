@@ -3,6 +3,7 @@ import { GridComponent } from '../grid/grid.component';
 import { GmPanelComponent } from '../gm-panel/gm-panel.component';
 import { RightPanelComponent } from '../right-panel/right-panel.component';
 import { BottomBarComponent } from '../bottom-bar/bottom-bar.component';
+import { StorySlidesComponent } from '../story-slides/story-slides.component';
 import { AuthService } from '../../services/auth.service';
 import { CombatService } from '../../services/combat.service';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,7 +12,7 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [GridComponent, GmPanelComponent, RightPanelComponent, BottomBarComponent, MatIconModule, CommonModule],
+  imports: [GridComponent, GmPanelComponent, RightPanelComponent, BottomBarComponent, StorySlidesComponent, MatIconModule, CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-col h-screen w-screen overflow-hidden bg-black text-stone-200 font-sans">
@@ -24,9 +25,13 @@ import { CommonModule } from '@angular/common';
           <app-gm-panel class="z-20 shadow-2xl"></app-gm-panel>
         }
 
-        <!-- Center Map -->
+        <!-- Center Map or Slides -->
         <div class="flex-1 relative z-10">
-          <app-grid></app-grid>
+          @if (combat.showStorySlides()) {
+            <app-story-slides [slides]="combat.storySlides()"></app-story-slides>
+          } @else {
+            <app-grid></app-grid>
+          }
         </div>
 
         <!-- Right Panel (Chat/Abilities) -->

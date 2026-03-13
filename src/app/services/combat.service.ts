@@ -29,6 +29,26 @@ export class CombatService {
   storyContent = signal<string>('The party approaches the ruined temple of <span style="color: #991b1b; font-weight: bold;">BloodDragons</span>. <br>A thick fog obscures the entrance, and the smell of sulfur hangs heavy in the air.');
   gmSecretContent = signal<string>('<strong>GM Secret:</strong> The statues by the door are actually Gargoyles waiting to ambush.');
 
+  // Story Slides State
+  showStorySlides = signal<boolean>(false);
+  storySlides = signal<{url: string, title: string, description: string}[]>([
+    {
+      url: 'https://picsum.photos/seed/dnd1/1920/1080',
+      title: 'A Taverna do Dragão Caolho',
+      description: 'O cheiro de cerveja anã e carne assada preenche o ar. Aventureiros de todas as raças se reúnem aqui em busca de glória e ouro.'
+    },
+    {
+      url: 'https://picsum.photos/seed/dnd2/1920/1080',
+      title: 'A Floresta Sussurrante',
+      description: 'As árvores parecem se mover quando você não está olhando. Um nevoeiro denso cobre o chão, escondendo perigos ancestrais.'
+    },
+    {
+      url: 'https://picsum.photos/seed/dnd3/1920/1080',
+      title: 'O Rei Goblin',
+      description: 'Sentado em seu trono de ossos, o Rei Goblin sorri maliciosamente. Seus olhos brilham com uma inteligência cruel e gananciosa.'
+    }
+  ]);
+
   // Tokens State
   tokens = signal<Token[]>([
     { 
@@ -92,5 +112,19 @@ export class CombatService {
 
   setMapBackground(url: string) {
     this.mapBackgroundImage.set(url);
+  }
+
+  addStorySlide(slide: {url: string, title: string, description: string}) {
+    this.storySlides.update(slides => [...slides, slide]);
+  }
+
+  updateStorySlide(index: number, updates: Partial<{url: string, title: string, description: string}>) {
+    this.storySlides.update(slides => {
+      const newSlides = [...slides];
+      if (newSlides[index]) {
+        newSlides[index] = { ...newSlides[index], ...updates };
+      }
+      return newSlides;
+    });
   }
 }
