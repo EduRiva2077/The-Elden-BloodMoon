@@ -37,6 +37,14 @@ export interface CharacterSheet {
   backpack?: string;
 }
 
+export interface TokenCondition {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  damagePerTurn?: number;
+}
+
 export interface Token {
   id: string;
   name: string;
@@ -47,7 +55,7 @@ export interface Token {
   maxHp: number;
   mp: number;
   maxMp: number;
-  conditions: string[];
+  conditions: TokenCondition[];
   controlledBy: string;
   color: string;
   imageUrl?: string;

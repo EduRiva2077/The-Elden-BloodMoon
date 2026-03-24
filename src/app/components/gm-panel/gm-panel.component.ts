@@ -97,6 +97,35 @@ import { MatIconModule } from '@angular/material/icon';
                     </div>
                   </div>
 
+                  <!-- Condições do Token -->
+                  <div class="pt-4 border-t border-stone-700 mt-4 space-y-3">
+                    <h4 class="text-xs font-bold text-amber-500 uppercase tracking-wider">Condições</h4>
+                    
+                    <div class="space-y-3 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                      @for (category of conditionCategories; track category.name) {
+                        <div class="space-y-1.5">
+                          <h5 class="text-[10px] text-stone-500 uppercase">{{ category.name }}</h5>
+                          <div class="flex flex-wrap gap-1.5">
+                            @for (condition of category.conditions; track condition) {
+                              <button 
+                                class="px-2 py-1 text-[10px] rounded-full border transition-colors"
+                                [class.bg-amber-900]="selectedToken()?.conditions?.includes(condition)"
+                                [class.border-amber-500]="selectedToken()?.conditions?.includes(condition)"
+                                [class.text-amber-100]="selectedToken()?.conditions?.includes(condition)"
+                                [class.bg-stone-800]="!selectedToken()?.conditions?.includes(condition)"
+                                [class.border-stone-700]="!selectedToken()?.conditions?.includes(condition)"
+                                [class.text-stone-400]="!selectedToken()?.conditions?.includes(condition)"
+                                [class.hover:border-stone-500]="!selectedToken()?.conditions?.includes(condition)"
+                                (click)="toggleCondition(condition)">
+                                {{ condition }}
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  </div>
+
                   <div class="pt-4 border-t border-stone-700 mt-4">
                     @if (tokenToDelete() === selectedToken()?.id) {
                       <div class="bg-red-900/30 border border-red-500/50 rounded p-3 text-sm flex flex-col gap-2">
@@ -133,11 +162,38 @@ export class GmPanelComponent {
   activeTab = signal<'map' | 'tokens'>('map');
   tokenToDelete = signal<string | null>(null);
 
+  conditionCategories = [
+    {
+      name: 'Elementais',
+      conditions: ['Fogo', 'Gelo', 'Relâmpago', 'Ácido', 'Veneno']
+    },
+    {
+      name: 'Transformações / Mentais',
+      conditions: ['Amaldiçoado', 'Zumbificando', 'Berserk/Fúria', 'Preso', 'Confuso', 'Dormindo', 'Petrificado']
+    },
+    {
+      name: 'Físicas / Status',
+      conditions: ['Caído', 'Cego', 'Surdo', 'Invisível', 'Exausto', 'Incapacitado', 'Paralisado']
+    }
+  ];
+
   selectedToken = computed(() => {
     const id = this.combat.selectedTokenId();
     if (!id) return null;
     return this.combat.tokens().find(t => t.id === id) || null;
   });
+
+  toggleCondition(condition: string) {
+    const token = this.selectedToken();
+    if (!token) return;
+    
+    const conditions = token.conditions || [];
+    const newConditions = conditions.includes(condition)
+      ? conditions.filter(c => c !== condition)
+      : [...conditions, condition];
+      
+    this.combat.updateToken(token.id, { conditions: newConditions });
+  }
 
   addToken(type: string) {
     const id = 't' + Math.random().toString(36).substring(2, 9);

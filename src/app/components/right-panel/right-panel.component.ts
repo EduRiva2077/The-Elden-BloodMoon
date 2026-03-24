@@ -675,6 +675,58 @@ import { ActionMenuComponent } from '../action-menu/action-menu.component';
                   </div>
                 </div>
 
+                <!-- Condições -->
+                <div class="space-y-2">
+                  <div class="flex justify-between items-center">
+                    <h4 class="text-xs font-bold text-amber-500 uppercase">Condições</h4>
+                    @if (auth.currentUser()?.role === 'GM' || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                      <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="isEditingConditions.set(!isEditingConditions())" title="Editar Condições">
+                        <mat-icon style="font-size: 16px; width: 16px; height: 16px;">{{ isEditingConditions() ? 'check' : 'edit' }}</mat-icon>
+                      </button>
+                    }
+                  </div>
+                  
+                  @if (isEditingConditions()) {
+                    <div class="space-y-3 bg-stone-900 p-2 rounded border border-stone-700 max-h-48 overflow-y-auto custom-scrollbar">
+                      @for (category of conditionCategories; track category.name) {
+                        <div class="space-y-1.5">
+                          <h5 class="text-[10px] text-stone-500 uppercase">{{ category.name }}</h5>
+                          <div class="flex flex-wrap gap-1.5">
+                            @for (condition of category.conditions; track condition) {
+                              <button 
+                                class="px-2 py-1 text-[10px] rounded-full border transition-colors"
+                                [class.bg-amber-900]="selectedToken()?.conditions?.includes(condition)"
+                                [class.border-amber-500]="selectedToken()?.conditions?.includes(condition)"
+                                [class.text-amber-100]="selectedToken()?.conditions?.includes(condition)"
+                                [class.bg-stone-800]="!selectedToken()?.conditions?.includes(condition)"
+                                [class.border-stone-700]="!selectedToken()?.conditions?.includes(condition)"
+                                [class.text-stone-400]="!selectedToken()?.conditions?.includes(condition)"
+                                [class.hover:border-stone-500]="!selectedToken()?.conditions?.includes(condition)"
+                                (click)="toggleCondition(condition)">
+                                {{ condition }}
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    @if ((selectedToken()?.conditions?.length || 0) > 0) {
+                      <div class="flex flex-wrap gap-1.5">
+                        @for (condition of selectedToken()?.conditions; track condition) {
+                          <span class="px-2 py-1 text-[10px] rounded-full border border-amber-500 bg-amber-900 text-amber-100">
+                            {{ condition }}
+                          </span>
+                        }
+                      </div>
+                    } @else {
+                      <div class="bg-stone-900 px-2 py-1.5 rounded border border-stone-700 text-[10px] text-stone-500 italic">
+                        Nenhuma condição ativa.
+                      </div>
+                    }
+                  }
+                </div>
+
                 <!-- Sub-tabs for Abilities -->
                 <div class="mt-4 border border-stone-700 rounded overflow-hidden">
                   <div class="flex bg-stone-900 border-b border-stone-700">
@@ -835,10 +887,26 @@ export class RightPanelComponent {
   auth = inject(AuthService);
 
   isEditingSheet = signal(false);
+  isEditingConditions = signal(false);
   fichaSubTab = signal<'weapons' | 'spells' | 'features'>('weapons');
   inventorySubTab = signal<'weapons' | 'spells' | 'features'>('weapons');
   isEditingInventory = signal(false);
   inventoryForm = new FormControl('', { nonNullable: true });
+
+  conditionCategories = [
+    {
+      name: 'Elementais',
+      conditions: ['Fogo', 'Gelo', 'Relâmpago', 'Ácido', 'Veneno']
+    },
+    {
+      name: 'Transformações / Mentais',
+      conditions: ['Amaldiçoado', 'Zumbificando', 'Berserk/Fúria', 'Preso', 'Confuso', 'Dormindo', 'Petrificado']
+    },
+    {
+      name: 'Físicas / Status',
+      conditions: ['Caído', 'Cego', 'Surdo', 'Invisível', 'Exausto', 'Incapacitado', 'Paralisado']
+    }
+  ];
 
   constructor() {
     effect(() => {
@@ -846,6 +914,7 @@ export class RightPanelComponent {
       const token = this.selectedToken();
       untracked(() => {
         this.isEditingSheet.set(false);
+        this.isEditingConditions.set(false);
         this.isEditingInventory.set(false);
         if (token?.sheet) {
           this.inventoryForm.setValue(token.sheet.backpack || '');
@@ -928,6 +997,18 @@ export class RightPanelComponent {
   weapons = computed(() => this.abilities().filter(a => a.category === 'weapon'));
   spells = computed(() => this.abilities().filter(a => a.category === 'spell'));
   features = computed(() => this.abilities().filter(a => !a.category || a.category === 'feature'));
+
+  toggleCondition(condition: string) {
+    const token = this.selectedToken();
+    if (!token) return;
+    
+    const conditions = token.conditions || [];
+    const newConditions = conditions.includes(condition)
+      ? conditions.filter(c => c !== condition)
+      : [...conditions, condition];
+      
+    this.combat.updateToken(token.id, { conditions: newConditions });
+  }
 
   addAbility() {
     if (this.abilityForm.invalid) return;

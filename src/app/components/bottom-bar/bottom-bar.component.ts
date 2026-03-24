@@ -15,9 +15,6 @@ import { MatIconModule } from '@angular/material/icon';
       
       <!-- Left: App Info -->
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-full bg-stone-800 border border-stone-700 flex items-center justify-center text-xs font-bold text-stone-400">
-          BD
-        </div>
         <div class="flex flex-col">
           <span class="text-sm font-bold text-stone-200"><span class="text-red-600">Blood</span>Dragons 1.1</span>
           <span class="text-[10px] font-mono text-amber-500">{{ currentUser()?.role }}</span>

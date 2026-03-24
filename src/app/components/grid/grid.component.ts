@@ -139,9 +139,9 @@ import { Ability } from '../../models/ability';
 
               <!-- Conditions -->
               @if (token.conditions.length > 0) {
-                <div class="absolute -top-2 -right-2 flex gap-1 pointer-events-none">
+                <div class="absolute -top-2 -right-2 flex flex-wrap-reverse justify-end gap-1 pointer-events-none w-16">
                   @for (cond of token.conditions; track cond) {
-                    <div class="w-4 h-4 bg-purple-600 rounded-full border border-white text-[8px] flex items-center justify-center text-white" title="{{cond}}">
+                    <div class="w-4 h-4 bg-purple-600 rounded-full border border-white text-[8px] flex items-center justify-center text-white shadow-sm font-bold" title="{{cond}}">
                       {{cond | slice:0:1}}
                     </div>
                   }
