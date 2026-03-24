@@ -1,12 +1,14 @@
 import { Ability } from './ability';
 
 export interface CharacterSheet {
-  classLevel: string;
+  class: string;
+  level: number;
   background: string;
   playerName: string;
   race: string;
   alignment: string;
-  xp: string;
+  xp: number;
+  hitDie: number;
   
   str: number;
   dex: number;

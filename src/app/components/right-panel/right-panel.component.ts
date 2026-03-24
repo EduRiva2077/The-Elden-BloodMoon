@@ -14,7 +14,30 @@ import { ActionMenuComponent } from '../action-menu/action-menu.component';
   imports: [CommonModule, MatIconModule, ReactiveFormsModule, ActionMenuComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="w-80 h-full bg-stone-900 border-l border-stone-800 flex flex-col text-stone-300">
+    <div class="w-80 h-full bg-stone-900 border-l border-stone-800 flex flex-col text-stone-300 relative">
+      <!-- Notifications Overlay -->
+      <div class="absolute top-12 left-0 right-0 z-50 pointer-events-none px-4 space-y-2">
+        @for (notif of combat.notifications(); track notif.id) {
+          <div class="pointer-events-auto bg-stone-800 border-l-4 p-3 rounded shadow-xl flex items-start gap-3 animate-in slide-in-from-right duration-300"
+               [class.border-amber-500]="notif.type === 'xp'"
+               [class.border-green-500]="notif.type === 'level-up'"
+               [class.border-blue-500]="notif.type === 'info'">
+            <mat-icon class="text-sm" [class.text-amber-500]="notif.type === 'xp'" [class.text-green-500]="notif.type === 'level-up'" [class.text-blue-500]="notif.type === 'info'">
+              {{ notif.type === 'xp' ? 'trending_up' : notif.type === 'level-up' ? 'military_tech' : 'info' }}
+            </mat-icon>
+            <div class="flex-1">
+              <p class="text-xs font-bold" [class.text-amber-500]="notif.type === 'xp'" [class.text-green-500]="notif.type === 'level-up'">
+                {{ notif.type === 'xp' ? 'XP Recebido' : notif.type === 'level-up' ? 'Subiu de Nível!' : 'Informação' }}
+              </p>
+              <p class="text-[10px] text-stone-300">{{ notif.message }}</p>
+            </div>
+            <button class="text-stone-500 hover:text-stone-300" (click)="combat.removeNotification(notif.id)">
+              <mat-icon style="font-size: 14px; width: 14px; height: 14px;">close</mat-icon>
+            </button>
+          </div>
+        }
+      </div>
+
       <!-- Tabs -->
       <div class="flex border-b border-stone-800 text-xs font-mono">
         <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'sheet'" [class.border-b-2]="combat.rightPanelTab() === 'sheet'" [class.border-amber-500]="combat.rightPanelTab() === 'sheet'" [class.bg-stone-800]="combat.rightPanelTab() === 'sheet'" (click)="combat.rightPanelTab.set('sheet')">Ficha</button>
@@ -43,7 +66,10 @@ import { ActionMenuComponent } from '../action-menu/action-menu.component';
             <!-- Wallet (Carteira) -->
             <div class="bg-stone-800 rounded border border-stone-700 p-3 shadow-md">
               <div class="flex justify-between items-center mb-2">
-                <h4 class="text-xs font-bold text-amber-500 uppercase">Carteira</h4>
+                <h4 class="text-xs font-bold text-amber-500 uppercase flex items-center gap-1">
+                  <mat-icon style="font-size: 14px; width: 14px; height: 14px;">account_balance_wallet</mat-icon>
+                  Carteira
+                </h4>
                 @if (auth.currentUser()?.role === 'GM' || selectedToken()?.controlledBy === auth.currentUser()?.id) {
                   <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="editSheet()" title="Editar Carteira">
                     <mat-icon style="font-size: 16px; width: 16px; height: 16px;">edit</mat-icon>
@@ -77,7 +103,10 @@ import { ActionMenuComponent } from '../action-menu/action-menu.component';
             <!-- Inventory Section -->
             <div class="bg-stone-800 rounded border border-stone-700 p-3 shadow-md">
               <div class="flex justify-between items-center mb-2">
-                <h4 class="text-xs font-bold text-amber-500 uppercase">Inventário</h4>
+                <h4 class="text-xs font-bold text-amber-500 uppercase flex items-center gap-1">
+                  <mat-icon style="font-size: 14px; width: 14px; height: 14px;">inventory_2</mat-icon>
+                  Mochila & Itens
+                </h4>
                 <div class="flex gap-2">
                   @if (isEditingInventory()) {
                     <button class="text-stone-500 hover:text-green-500 transition-colors" (click)="saveInventory()" title="Salvar Inventário">
@@ -96,7 +125,10 @@ import { ActionMenuComponent } from '../action-menu/action-menu.component';
               @if (isEditingInventory()) {
                 <textarea [formControl]="inventoryForm" rows="5" class="w-full bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500 resize-none text-stone-300"></textarea>
               } @else {
-                <div class="bg-stone-900 p-2 rounded border border-stone-700 min-h-[60px] text-xs text-stone-300 whitespace-pre-wrap">{{ selectedToken()?.sheet?.backpack || 'Inventário vazio.' }}</div>
+                <div class="bg-stone-900 p-2 rounded border border-stone-700 min-h-[60px] text-xs text-stone-300 whitespace-pre-wrap flex items-start gap-2">
+                  <mat-icon class="text-stone-500 mt-0.5" style="font-size: 12px; width: 12px; height: 12px;">description</mat-icon>
+                  {{ selectedToken()?.sheet?.backpack || 'Inventário vazio.' }}
+                </div>
               }
             </div>
 
@@ -202,24 +234,27 @@ import { ActionMenuComponent } from '../action-menu/action-menu.component';
             <!-- Abilities Section with Sub-tabs -->
             <div class="mt-6 border border-stone-700 rounded overflow-hidden bg-stone-900/30">
               <div class="flex border-b border-stone-700 bg-stone-900/50">
-                <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors"
-                        [class.text-amber-500]="inventorySubTab() === 'weapons'"
-                        [class.bg-stone-800]="inventorySubTab() === 'weapons'"
-                        (click)="inventorySubTab.set('weapons')">
-                  Armas
-                </button>
-                <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors border-l border-stone-700"
-                        [class.text-amber-500]="inventorySubTab() === 'spells'"
-                        [class.bg-stone-800]="inventorySubTab() === 'spells'"
-                        (click)="inventorySubTab.set('spells')">
-                  Magias
-                </button>
-                <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors border-l border-stone-700"
-                        [class.text-amber-500]="inventorySubTab() === 'features'"
-                        [class.bg-stone-800]="inventorySubTab() === 'features'"
-                        (click)="inventorySubTab.set('features')">
-                  Habilidades
-                </button>
+                    <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors flex items-center justify-center gap-1"
+                            [class.text-amber-500]="inventorySubTab() === 'weapons'"
+                            [class.bg-stone-800]="inventorySubTab() === 'weapons'"
+                            (click)="inventorySubTab.set('weapons')">
+                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">shield</mat-icon>
+                      Armas
+                    </button>
+                    <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors border-l border-stone-700 flex items-center justify-center gap-1"
+                            [class.text-amber-500]="inventorySubTab() === 'spells'"
+                            [class.bg-stone-800]="inventorySubTab() === 'spells'"
+                            (click)="inventorySubTab.set('spells')">
+                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">auto_fix_high</mat-icon>
+                      Magias
+                    </button>
+                    <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors border-l border-stone-700 flex items-center justify-center gap-1"
+                            [class.text-amber-500]="inventorySubTab() === 'features'"
+                            [class.bg-stone-800]="inventorySubTab() === 'features'"
+                            (click)="inventorySubTab.set('features')">
+                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">star</mat-icon>
+                      Habilidades
+                    </button>
               </div>
 
               <div class="p-3 space-y-4">
@@ -416,8 +451,12 @@ import { ActionMenuComponent } from '../action-menu/action-menu.component';
 
                   <div class="grid grid-cols-2 gap-2">
                     <div class="flex flex-col gap-1">
-                      <label for="classLevel" class="text-[10px] text-stone-500 uppercase">Classe & Nível</label>
-                      <input id="classLevel" formControlName="classLevel" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
+                      <label for="class" class="text-[10px] text-stone-500 uppercase">Classe</label>
+                      <input id="class" formControlName="class" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <label for="level" class="text-[10px] text-stone-500 uppercase">Nível</label>
+                      <input id="level" type="number" formControlName="level" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
                     </div>
                     <div class="flex flex-col gap-1">
                       <label for="background" class="text-[10px] text-stone-500 uppercase">Antecedente</label>
@@ -437,7 +476,11 @@ import { ActionMenuComponent } from '../action-menu/action-menu.component';
                     </div>
                     <div class="flex flex-col gap-1">
                       <label for="xp" class="text-[10px] text-stone-500 uppercase">XP</label>
-                      <input id="xp" formControlName="xp" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
+                      <input id="xp" type="number" formControlName="xp" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
+                    </div>
+                    <div class="flex flex-col gap-1">
+                      <label for="hitDie" class="text-[10px] text-stone-500 uppercase">Dado de Vida (d?)</label>
+                      <input id="hitDie" type="number" formControlName="hitDie" placeholder="ex: 10" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
                     </div>
                   </div>
 
@@ -451,8 +494,8 @@ import { ActionMenuComponent } from '../action-menu/action-menu.component';
                       <input id="initiative" type="number" formControlName="initiative" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs text-center focus:outline-none focus:border-amber-500">
                     </div>
                     <div class="flex flex-col gap-1">
-                      <label for="speed" class="text-[10px] text-stone-500 uppercase text-center">Deslocamento (m)</label>
-                      <input id="speed" type="number" formControlName="speed" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs text-center focus:outline-none focus:border-amber-500">
+                      <label for="speed" class="text-[10px] text-stone-500 uppercase text-center">Deslocamento (Metros)</label>
+                      <input id="speed" type="number" formControlName="speed" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs text-center focus:outline-none focus:border-amber-500 font-mono">
                     </div>
                   </div>
 
@@ -531,62 +574,90 @@ import { ActionMenuComponent } from '../action-menu/action-menu.component';
                     }
                   </div>
                   <div class="grid grid-cols-2 gap-x-2 gap-y-1 mt-2 text-stone-400">
-                    <div><span class="text-stone-500">PV:</span> {{ sheet.hp }}/{{ sheet.maxHp }}</div>
-                    <div><span class="text-stone-500">Mana:</span> {{ sheet.mp }}/{{ sheet.maxMp }}</div>
-                    <div><span class="text-stone-500">Classe & Nível:</span> {{ sheet.classLevel }}</div>
-                    <div><span class="text-stone-500">Antecedente:</span> {{ sheet.background }}</div>
-                    <div><span class="text-stone-500">Jogador:</span> {{ sheet.playerName }}</div>
-                    <div><span class="text-stone-500">Raça:</span> {{ sheet.race }}</div>
-                    <div><span class="text-stone-500">Tendência:</span> {{ sheet.alignment }}</div>
-                    <div><span class="text-stone-500">XP:</span> {{ sheet.xp }}</div>
+                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">favorite</mat-icon> <span class="text-stone-500">PV:</span> {{ sheet.hp }}/{{ sheet.maxHp }}</div>
+                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">bolt</mat-icon> <span class="text-stone-500">Mana:</span> {{ sheet.mp }}/{{ sheet.maxMp }}</div>
+                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">school</mat-icon> <span class="text-stone-500">Classe:</span> {{ sheet.class }}</div>
+                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">military_tech</mat-icon> <span class="text-stone-500">Nível:</span> {{ sheet.level }}</div>
+                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">history</mat-icon> <span class="text-stone-500">Antecedente:</span> {{ sheet.background }}</div>
+                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">person</mat-icon> <span class="text-stone-500">Jogador:</span> {{ sheet.playerName }}</div>
+                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">groups</mat-icon> <span class="text-stone-500">Raça:</span> {{ sheet.race }}</div>
+                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">balance</mat-icon> <span class="text-stone-500">Tendência:</span> {{ sheet.alignment }}</div>
+                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">trending_up</mat-icon> <span class="text-stone-500">XP:</span> {{ sheet.xp }}</div>
                   </div>
                 </div>
 
                 <!-- Combat Stats -->
                 <div class="flex justify-between items-center bg-stone-900 p-2 rounded border border-stone-700">
-                  <div class="text-center">
-                    <div class="text-[10px] text-stone-500 uppercase">CA</div>
+                  <div class="text-center flex flex-col items-center">
+                    <div class="text-[10px] text-stone-500 uppercase flex items-center gap-1">
+                      <mat-icon style="font-size: 10px; width: 10px; height: 10px;">security</mat-icon>
+                      CA
+                    </div>
                     <div class="font-bold text-lg text-amber-500">{{ sheet.ac }}</div>
                   </div>
-                  <div class="text-center">
-                    <div class="text-[10px] text-stone-500 uppercase">Iniciativa</div>
+                  <div class="text-center flex flex-col items-center">
+                    <div class="text-[10px] text-stone-500 uppercase flex items-center gap-1">
+                      <mat-icon style="font-size: 10px; width: 10px; height: 10px;">timer</mat-icon>
+                      Iniciativa
+                    </div>
                     <div class="font-bold text-lg text-amber-500">{{ sheet.initiative >= 0 ? '+' : '' }}{{ sheet.initiative }}</div>
                   </div>
-                  <div class="text-center">
-                    <div class="text-[10px] text-stone-500 uppercase">Deslocamento</div>
-                    <div class="font-bold text-lg text-amber-500">{{ sheet.speed }}m</div>
+                  <div class="text-center flex flex-col items-center">
+                    <div class="text-[10px] text-stone-500 uppercase flex items-center gap-1">
+                      <mat-icon style="font-size: 10px; width: 10px; height: 10px;">directions_run</mat-icon>
+                      Deslocamento
+                    </div>
+                    <div class="font-bold text-lg text-amber-500">{{ sheet.speed }} Metros</div>
                   </div>
                 </div>
 
                 <!-- Attributes -->
                 <div class="grid grid-cols-3 gap-2">
-                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center">
-                    <div class="text-[10px] text-stone-500 uppercase font-bold">FOR</div>
+                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center flex flex-col items-center">
+                    <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
+                      <mat-icon style="font-size: 10px; width: 10px; height: 10px;">fitness_center</mat-icon>
+                      FOR
+                    </div>
                     <div class="font-bold text-lg">{{ sheet.str }}</div>
                     <div class="text-[10px] text-stone-400">{{ mathService.calculateModifier(sheet.str) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.str) }}</div>
                   </div>
-                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center">
-                    <div class="text-[10px] text-stone-500 uppercase font-bold">DES</div>
+                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center flex flex-col items-center">
+                    <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
+                      <mat-icon style="font-size: 10px; width: 10px; height: 10px;">directions_run</mat-icon>
+                      DES
+                    </div>
                     <div class="font-bold text-lg">{{ sheet.dex }}</div>
                     <div class="text-[10px] text-stone-400">{{ mathService.calculateModifier(sheet.dex) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.dex) }}</div>
                   </div>
-                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center">
-                    <div class="text-[10px] text-stone-500 uppercase font-bold">CON</div>
+                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center flex flex-col items-center">
+                    <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
+                      <mat-icon style="font-size: 10px; width: 10px; height: 10px;">favorite</mat-icon>
+                      CON
+                    </div>
                     <div class="font-bold text-lg">{{ sheet.con }}</div>
                     <div class="text-[10px] text-stone-400">{{ mathService.calculateModifier(sheet.con) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.con) }}</div>
                   </div>
-                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center">
-                    <div class="text-[10px] text-stone-500 uppercase font-bold">INT</div>
+                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center flex flex-col items-center">
+                    <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
+                      <mat-icon style="font-size: 10px; width: 10px; height: 10px;">menu_book</mat-icon>
+                      INT
+                    </div>
                     <div class="font-bold text-lg">{{ sheet.int }}</div>
                     <div class="text-[10px] text-stone-400">{{ mathService.calculateModifier(sheet.int) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.int) }}</div>
                   </div>
-                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center">
-                    <div class="text-[10px] text-stone-500 uppercase font-bold">SAB</div>
+                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center flex flex-col items-center">
+                    <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
+                      <mat-icon style="font-size: 10px; width: 10px; height: 10px;">visibility</mat-icon>
+                      SAB
+                    </div>
                     <div class="font-bold text-lg">{{ sheet.wis }}</div>
                     <div class="text-[10px] text-stone-400">{{ mathService.calculateModifier(sheet.wis) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.wis) }}</div>
                   </div>
-                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center">
-                    <div class="text-[10px] text-stone-500 uppercase font-bold">CAR</div>
+                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center flex flex-col items-center">
+                    <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
+                      <mat-icon style="font-size: 10px; width: 10px; height: 10px;">record_voice_over</mat-icon>
+                      CAR
+                    </div>
                     <div class="font-bold text-lg">{{ sheet.cha }}</div>
                     <div class="text-[10px] text-stone-400">{{ mathService.calculateModifier(sheet.cha) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.cha) }}</div>
                   </div>
@@ -607,22 +678,25 @@ import { ActionMenuComponent } from '../action-menu/action-menu.component';
                 <!-- Sub-tabs for Abilities -->
                 <div class="mt-4 border border-stone-700 rounded overflow-hidden">
                   <div class="flex bg-stone-900 border-b border-stone-700">
-                    <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors"
+                    <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors flex items-center justify-center gap-1"
                             [class.text-amber-500]="fichaSubTab() === 'weapons'"
                             [class.bg-stone-800]="fichaSubTab() === 'weapons'"
                             (click)="fichaSubTab.set('weapons')">
+                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">shield</mat-icon>
                       Armas
                     </button>
-                    <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors border-l border-stone-700"
+                    <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors border-l border-stone-700 flex items-center justify-center gap-1"
                             [class.text-amber-500]="fichaSubTab() === 'spells'"
                             [class.bg-stone-800]="fichaSubTab() === 'spells'"
                             (click)="fichaSubTab.set('spells')">
+                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">auto_fix_high</mat-icon>
                       Magias
                     </button>
-                    <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors border-l border-stone-700"
+                    <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors border-l border-stone-700 flex items-center justify-center gap-1"
                             [class.text-amber-500]="fichaSubTab() === 'features'"
                             [class.bg-stone-800]="fichaSubTab() === 'features'"
                             (click)="fichaSubTab.set('features')">
+                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">star</mat-icon>
                       Habilidades
                     </button>
                   </div>
@@ -793,12 +867,14 @@ export class RightPanelComponent {
   showHealingField = signal<boolean>(false);
 
   sheetForm = new FormGroup({
-    classLevel: new FormControl('', { nonNullable: true }),
+    class: new FormControl('', { nonNullable: true }),
+    level: new FormControl(1, { nonNullable: true }),
     background: new FormControl('', { nonNullable: true }),
     playerName: new FormControl('', { nonNullable: true }),
     race: new FormControl('', { nonNullable: true }),
     alignment: new FormControl('', { nonNullable: true }),
-    xp: new FormControl('', { nonNullable: true }),
+    xp: new FormControl(0, { nonNullable: true }),
+    hitDie: new FormControl(10, { nonNullable: true }),
     str: new FormControl(10, { nonNullable: true }),
     dex: new FormControl(10, { nonNullable: true }),
     con: new FormControl(10, { nonNullable: true }),
@@ -920,12 +996,14 @@ export class RightPanelComponent {
       });
     } else {
       this.sheetForm.reset({
-        classLevel: '',
+        class: '',
+        level: 1,
         background: '',
         playerName: '',
         race: '',
         alignment: '',
-        xp: '',
+        xp: 0,
+        hitDie: 10,
         str: 10,
         dex: 10,
         con: 10,
