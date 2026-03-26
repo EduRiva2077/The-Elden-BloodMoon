@@ -59,7 +59,7 @@ import { Ability } from '../../models/ability';
               <div class="absolute inset-0 pointer-events-none z-25 overflow-hidden">
                 @for (cell of combat.fogOfWar(); track cell) {
                   @let coords = getCoords(cell);
-                  <div class="absolute bg-stone-950 transition-opacity duration-300"
+                  <div class="absolute bg-black transition-opacity duration-300"
                        [class.opacity-100]="currentUser()?.role !== 'GM'"
                        [class.opacity-60]="currentUser()?.role === 'GM'"
                        [style.left.px]="coords.x * gridSize"
@@ -109,45 +109,46 @@ import { Ability } from '../../models/ability';
             }
 
             @for (token of tokens(); track token.id) {
-              <div class="absolute top-0 left-0 shadow-lg border-2 flex flex-col items-center justify-center transition-shadow hover:shadow-amber-500/50 z-30 group"
-                   tabindex="0"
-                   [class.rounded-full]="token.type !== 'item'"
-                   [class.rounded-md]="token.type === 'item'"
-                   [class.cursor-grab]="canMove(token)"
-                   [class.active:cursor-grabbing]="canMove(token)"
-                   [class.cursor-not-allowed]="!canMove(token)"
-                   [class.border-yellow-400]="token.type === 'player' && !isAffected(token) && selectedTokenId() !== token.id"
-                   [class.border-red-500]="token.type === 'enemy' && !isAffected(token) && selectedTokenId() !== token.id"
-                   [class.border-blue-500]="token.type === 'npc' && !isAffected(token) && selectedTokenId() !== token.id"
-                   [class.border-black]="token.type === 'boss' && !isAffected(token) && selectedTokenId() !== token.id"
-                   [class.border-purple-500]="token.type === 'item' && !isAffected(token) && selectedTokenId() !== token.id"
-                   [class.border-stone-400]="!token.type && !isAffected(token) && selectedTokenId() !== token.id"
-                   [class.!border-red-500]="isAffected(token)"
-                   [class.!border-white]="selectedTokenId() === token.id && !isAffected(token)"
-                   [class.shadow-[0_0_15px_rgba(255,255,255,0.8)]]="selectedTokenId() === token.id && !isAffected(token)"
-                   [class.shadow-[0_0_15px_rgba(239,68,68,0.8)]]="isAffected(token)"
-                   [style.backgroundColor]="token.color"
-                   [style.width.px]="gridSize"
-                   [style.height.px]="gridSize"
-                   [cdkDragFreeDragPosition]="{x: token.x * gridSize, y: token.y * gridSize}"
-                   cdkDrag
-                   [cdkDragBoundary]="boundary"
-                   [cdkDragDisabled]="!canMove(token)"
-                   (cdkDragEnded)="onDragEnded($event, token)"
-                   (click)="onTokenClick(token, $event)"
-                   (dblclick)="onTokenDoubleClick(token, $event)"
-                   (keydown.enter)="onTokenClick(token, $event)">
-              
-              <!-- Token Image or Initials -->
-              @if (token.imageUrl) {
-                <img [src]="token.imageUrl" class="w-full h-full object-cover pointer-events-none" [class.rounded-full]="token.type !== 'item'" [class.rounded-md]="token.type === 'item'" alt="Token" referrerpolicy="no-referrer" />
-              } @else {
-                <span class="font-bold text-white text-shadow pointer-events-none">{{ token.name | slice:0:2 }}</span>
-              }
+              @if (!isTokenHiddenByFog(token)) {
+                <div class="absolute top-0 left-0 shadow-lg border-2 flex flex-col items-center justify-center transition-shadow hover:shadow-amber-500/50 z-30 group"
+                     tabindex="0"
+                     [class.rounded-full]="token.type !== 'item'"
+                     [class.rounded-md]="token.type === 'item'"
+                     [class.cursor-grab]="canMove(token)"
+                     [class.active:cursor-grabbing]="canMove(token)"
+                     [class.cursor-not-allowed]="!canMove(token)"
+                     [class.border-yellow-400]="token.type === 'player' && !isAffected(token) && selectedTokenId() !== token.id"
+                     [class.border-red-500]="token.type === 'enemy' && !isAffected(token) && selectedTokenId() !== token.id"
+                     [class.border-blue-500]="token.type === 'npc' && !isAffected(token) && selectedTokenId() !== token.id"
+                     [class.border-black]="token.type === 'boss' && !isAffected(token) && selectedTokenId() !== token.id"
+                     [class.border-purple-500]="token.type === 'item' && !isAffected(token) && selectedTokenId() !== token.id"
+                     [class.border-stone-400]="!token.type && !isAffected(token) && selectedTokenId() !== token.id"
+                     [class.!border-red-500]="isAffected(token)"
+                     [class.!border-white]="selectedTokenId() === token.id && !isAffected(token)"
+                     [class.shadow-[0_0_15px_rgba(255,255,255,0.8)]]="selectedTokenId() === token.id && !isAffected(token)"
+                     [class.shadow-[0_0_15px_rgba(239,68,68,0.8)]]="isAffected(token)"
+                     [style.backgroundColor]="token.color"
+                     [style.width.px]="gridSize"
+                     [style.height.px]="gridSize"
+                     [cdkDragFreeDragPosition]="{x: token.x * gridSize, y: token.y * gridSize}"
+                     cdkDrag
+                     [cdkDragBoundary]="boundary"
+                     [cdkDragDisabled]="!canMove(token)"
+                     (cdkDragEnded)="onDragEnded($event, token)"
+                     (click)="onTokenClick(token, $event)"
+                     (dblclick)="onTokenDoubleClick(token, $event)"
+                     (keydown.enter)="onTokenClick(token, $event)">
+                
+                <!-- Token Image or Initials -->
+                @if (token.imageUrl) {
+                  <img [src]="token.imageUrl" class="w-full h-full object-cover pointer-events-none" [class.rounded-full]="token.type !== 'item'" [class.rounded-md]="token.type === 'item'" alt="Token" referrerpolicy="no-referrer" />
+                } @else {
+                  <span class="font-bold text-white text-shadow pointer-events-none">{{ token.name | slice:0:2 }}</span>
+                }
 
-              <!-- Status Bars -->
-              @if (token.type !== 'item') {
-                <div class="absolute -bottom-5 left-0 right-0 flex flex-col gap-0.5 pointer-events-none">
+                <!-- Status Bars -->
+                @if (token.type !== 'item') {
+                  <div class="absolute -bottom-5 left-0 right-0 flex flex-col gap-0.5 pointer-events-none">
                   <!-- HP Bar -->
                   <div class="h-1.5 bg-red-900 rounded-full overflow-hidden border border-stone-900">
                     <div class="h-full bg-green-500 transition-all duration-300" [style.width.%]="(token.hp / token.maxHp) * 100"></div>
@@ -177,6 +178,7 @@ import { Ability } from '../../models/ability';
                 {{ token.name }} @if (token.type !== 'item') { | PV: {{ token.hp }}/{{ token.maxHp }} @if (token.maxMp > 0) { | Mana: {{ token.mp }}/{{ token.maxMp }} } }
               </div>
             </div>
+            }
           }
         </div>
       </div>
@@ -318,6 +320,18 @@ export class GridComponent {
 
   isAffected(token: Token): boolean {
     return this.affectedTokens().some(t => t.id === token.id);
+  }
+
+  isTokenHiddenByFog(token: Token): boolean {
+    if (!this.combat.isFogEnabled()) return false;
+    if (this.currentUser()?.role === 'GM') return false;
+    if (token.type === 'player') return false; // Players can always see other players for now
+    
+    // Check if the token's center is inside a fog cell
+    const gridX = Math.floor(token.x + 0.5);
+    const gridY = Math.floor(token.y + 0.5);
+    const cell = `${gridX},${gridY}`;
+    return this.combat.fogOfWar().includes(cell);
   }
 
   getCoords(cell: string): {x: number, y: number} {
