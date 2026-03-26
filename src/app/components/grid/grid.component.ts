@@ -112,6 +112,8 @@ import { Ability } from '../../models/ability';
               @if (!isTokenHiddenByFog(token)) {
                 <div class="absolute top-0 left-0 shadow-lg border-2 flex flex-col items-center justify-center transition-shadow hover:shadow-amber-500/50 z-30 group"
                      tabindex="0"
+                     [class.opacity-40]="isTokenInFog(token) && currentUser()?.role === 'GM' && token.type !== 'player'"
+                     [class.grayscale]="isTokenInFog(token) && currentUser()?.role === 'GM' && token.type !== 'player'"
                      [class.rounded-full]="token.type !== 'item'"
                      [class.rounded-md]="token.type === 'item'"
                      [class.cursor-grab]="canMove(token)"
@@ -322,16 +324,18 @@ export class GridComponent {
     return this.affectedTokens().some(t => t.id === token.id);
   }
 
-  isTokenHiddenByFog(token: Token): boolean {
+  isTokenInFog(token: Token): boolean {
     if (!this.combat.isFogEnabled()) return false;
-    if (this.currentUser()?.role === 'GM') return false;
-    if (token.type === 'player') return false; // Players can always see other players for now
-    
-    // Check if the token's center is inside a fog cell
     const gridX = Math.floor(token.x + 0.5);
     const gridY = Math.floor(token.y + 0.5);
     const cell = `${gridX},${gridY}`;
     return this.combat.fogOfWar().includes(cell);
+  }
+
+  isTokenHiddenByFog(token: Token): boolean {
+    if (this.currentUser()?.role === 'GM') return false; // GM always sees everything
+    if (token.type === 'player') return false; // Players can always see other players for now
+    return this.isTokenInFog(token);
   }
 
   getCoords(cell: string): {x: number, y: number} {
