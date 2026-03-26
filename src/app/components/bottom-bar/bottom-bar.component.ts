@@ -264,8 +264,8 @@ import { Token } from '../../models/token';
                   [class.text-amber-500]="combat.gmPanelVisible()"
                   [class.border-amber-500]="combat.gmPanelVisible()"
                   (click)="combat.gmPanelVisible.set(!combat.gmPanelVisible())"
-                  title="Alternar Painel do Mestre (Mapa/Tokens)">
-            <mat-icon style="font-size: 20px; width: 20px; height: 20px;">edit</mat-icon>
+                  title="Mapa & Tokens">
+            <mat-icon style="font-size: 20px; width: 20px; height: 20px;">history_edu</mat-icon>
           </button>
         }
 
