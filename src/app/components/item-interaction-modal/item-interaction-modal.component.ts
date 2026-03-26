@@ -4,6 +4,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { CombatService } from '../../services/combat.service';
 import { AuthService } from '../../services/auth.service';
 import { ItemToken, ItemAction } from '../../models/item-token';
+import { Token } from '../../models/token';
+import { CombatNotification } from '../../services/combat.service';
 import { DndCoreEngineService } from '../../services/dnd-core-engine.service';
 import { FormsModule } from '@angular/forms';
 
@@ -321,7 +323,7 @@ export class ItemInteractionModalComponent implements DoCheck {
     const selectedTokenId = this.combat.selectedTokenId();
     
     if (!currentItem || !selectedTokenId) {
-      this.combat.notifications.update(n => [...n, {
+      this.combat.notifications.update((n: CombatNotification[]) => [...n, {
         id: Date.now().toString(),
         message: 'Selecione um token seu primeiro para pegar o item.',
         type: 'info',
@@ -330,7 +332,7 @@ export class ItemInteractionModalComponent implements DoCheck {
       return;
     }
 
-    const token = this.combat.tokens().find(t => t.id === selectedTokenId);
+    const token = this.combat.tokens().find((t: Token) => t.id === selectedTokenId);
     if (!token || !token.sheet) return;
 
     // Adicionar ao inventário do token
@@ -343,11 +345,11 @@ export class ItemInteractionModalComponent implements DoCheck {
     });
 
     // Marcar item como pego (remove do grid)
-    this.combat.itemTokens.update(items => items.map(i => 
+    this.combat.itemTokens.update((items: ItemToken[]) => items.map((i: ItemToken) => 
       i.id === currentItem.id ? { ...i, isPickedUp: true } : i
     ));
 
-    this.combat.notifications.update(n => [...n, {
+    this.combat.notifications.update((n: CombatNotification[]) => [...n, {
       id: Date.now().toString(),
       message: `${token.name} pegou ${currentItem.name}!`,
       type: 'info',
@@ -360,7 +362,7 @@ export class ItemInteractionModalComponent implements DoCheck {
   rollAction(action: ItemAction) {
     const selectedTokenId = this.combat.selectedTokenId();
     if (!selectedTokenId) {
-      this.combat.notifications.update(n => [...n, {
+      this.combat.notifications.update((n: CombatNotification[]) => [...n, {
         id: Date.now().toString(),
         message: 'Selecione um token seu para realizar a ação.',
         type: 'info',
@@ -369,7 +371,7 @@ export class ItemInteractionModalComponent implements DoCheck {
       return;
     }
 
-    const token = this.combat.tokens().find(t => t.id === selectedTokenId);
+    const token = this.combat.tokens().find((t: Token) => t.id === selectedTokenId);
     if (!token || !token.sheet) return;
 
     // Simular rolagem de perícia (simplificado)
@@ -393,7 +395,7 @@ export class ItemInteractionModalComponent implements DoCheck {
     const total = d20 + modifier;
     const success = total >= action.dc;
 
-    this.combat.notifications.update(n => [...n, {
+    this.combat.notifications.update((n: CombatNotification[]) => [...n, {
       id: Date.now().toString(),
       message: `${token.name} rolou ${action.skill} (${d20} + ${modifier} = ${total}) contra CD ${action.dc}. ${success ? 'Sucesso!' : 'Falha.'}`,
       type: 'info',
@@ -404,18 +406,18 @@ export class ItemInteractionModalComponent implements DoCheck {
     if (success) {
       const currentItem = this.item();
       if (currentItem) {
-        this.combat.itemTokens.update(items => items.map(i => {
+        this.combat.itemTokens.update((items: ItemToken[]) => items.map((i: ItemToken) => {
           if (i.id === currentItem.id) {
             return {
               ...i,
-              actions: i.actions.map(a => a.id === action.id ? { ...a, isRevealed: true } : a)
+              actions: i.actions.map((a: ItemAction) => a.id === action.id ? { ...a, isRevealed: true } : a)
             };
           }
           return i;
         }));
         
         // Atualiza a referência local para refletir a mudança imediatamente
-        this.combat.selectedItemToken.set(this.combat.itemTokens().find(i => i.id === currentItem.id) || null);
+        this.combat.selectedItemToken.set(this.combat.itemTokens().find((i: ItemToken) => i.id === currentItem.id) || null);
       }
     }
   }
@@ -454,11 +456,11 @@ export class ItemInteractionModalComponent implements DoCheck {
     const currentItem = this.item();
     if (!currentItem || !this.editData.id) return;
 
-    this.combat.itemTokens.update(items => items.map(i => 
+    this.combat.itemTokens.update((items: ItemToken[]) => items.map((i: ItemToken) => 
       i.id === currentItem.id ? { ...i, ...this.editData } as ItemToken : i
     ));
 
-    this.combat.notifications.update(n => [...n, {
+    this.combat.notifications.update((n: CombatNotification[]) => [...n, {
       id: Date.now().toString(),
       message: `Item "${this.editData.name}" atualizado.`,
       type: 'info',

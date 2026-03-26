@@ -163,9 +163,9 @@ import { Ability } from '../../models/ability';
               <!-- Conditions -->
               @if (token.conditions.length > 0) {
                 <div class="absolute -top-4 -right-4 flex flex-wrap-reverse justify-end gap-1 pointer-events-none w-20">
-                  @for (cond of token.conditions; track cond) {
-                    <div class="w-5 h-5 bg-stone-900 rounded-full border border-stone-600 text-amber-500 flex items-center justify-center shadow-sm" title="{{cond}}">
-                      <mat-icon style="font-size: 12px; width: 12px; height: 12px;">{{ getConditionIcon(cond) }}</mat-icon>
+                  @for (cond of token.conditions; track cond.id) {
+                    <div class="w-5 h-5 bg-stone-900 rounded-full border border-stone-600 flex items-center justify-center shadow-sm" [title]="cond.name">
+                      <mat-icon style="font-size: 12px; width: 12px; height: 12px;" [style.color]="cond.color">{{ cond.icon }}</mat-icon>
                     </div>
                   }
                 </div>
@@ -231,45 +231,7 @@ export class GridComponent {
     return this.tokens().filter(t => this.isTokenInArea(t, ability, origin, target));
   });
 
-  getConditionIcon(cond: string): string {
-    const map: Record<string, string> = {
-      // Elementais
-      'Fogo': 'local_fire_department',
-      'Gelo': 'ac_unit',
-      'Relâmpago': 'flash_on',
-      'Ácido': 'science',
-      'Veneno': 'coronavirus',
-      
-      // Transformações / Mentais
-      'Amaldiçoado': 'sentiment_very_dissatisfied',
-      'Zumbificando': 'sick',
-      'Berserk/Fúria': 'sports_martial_arts',
-      'Preso': 'link',
-      'Confuso': 'question_mark',
-      'Dormindo': 'bedtime',
-      'Petrificado': 'terrain',
-      
-      // Físicas / Status
-      'Caído': 'airline_seat_flat',
-      'Cego': 'visibility_off',
-      'Surdo': 'hearing_disabled',
-      'Invisível': 'visibility',
-      'Exausto': 'battery_alert',
-      'Incapacitado': 'block',
-      'Paralisado': 'bolt',
 
-      // Outros / Antigos (mantidos por compatibilidade)
-      'Enfeitiçado': 'favorite',
-      'Amedrontado': 'mood_bad',
-      'Agarrado': 'pan_tool',
-      'Envenenado': 'coronavirus',
-      'Impedido': 'lock',
-      'Atordoado': 'stars',
-      'Inconsciente': 'hotel',
-      'Exaustão': 'battery_alert'
-    };
-    return map[cond] || 'help_outline';
-  }
 
   areaPath = computed(() => {
     const ability = this.combat.previewAbility();

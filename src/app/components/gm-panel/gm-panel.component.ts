@@ -1,5 +1,6 @@
 import { Component, ChangeDetectionStrategy, inject, signal, computed } from '@angular/core';
-import { CombatService } from '../../services/combat.service';
+import { CombatService, AVAILABLE_CONDITIONS } from '../../services/combat.service';
+import { TokenCondition } from '../../models/token';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 
@@ -178,18 +179,19 @@ import { MatIconModule } from '@angular/material/icon';
                         <div class="space-y-1.5">
                           <h5 class="text-[10px] text-stone-500 uppercase">{{ category.name }}</h5>
                           <div class="flex flex-wrap gap-1.5">
-                            @for (condition of category.conditions; track condition) {
+                            @for (condition of category.conditions; track condition.id) {
                               <button 
-                                class="px-2 py-1 text-[10px] rounded-full border transition-colors"
-                                [class.bg-amber-900]="selectedToken()?.conditions?.includes(condition)"
-                                [class.border-amber-500]="selectedToken()?.conditions?.includes(condition)"
-                                [class.text-amber-100]="selectedToken()?.conditions?.includes(condition)"
-                                [class.bg-stone-800]="!selectedToken()?.conditions?.includes(condition)"
-                                [class.border-stone-700]="!selectedToken()?.conditions?.includes(condition)"
-                                [class.text-stone-400]="!selectedToken()?.conditions?.includes(condition)"
-                                [class.hover:border-stone-500]="!selectedToken()?.conditions?.includes(condition)"
+                                class="px-2 py-1 text-[10px] rounded-full border transition-colors flex items-center gap-1"
+                                [class.bg-amber-900]="hasCondition(condition.id)"
+                                [class.border-amber-500]="hasCondition(condition.id)"
+                                [class.text-amber-100]="hasCondition(condition.id)"
+                                [class.bg-stone-800]="!hasCondition(condition.id)"
+                                [class.border-stone-700]="!hasCondition(condition.id)"
+                                [class.text-stone-400]="!hasCondition(condition.id)"
+                                [class.hover:border-stone-500]="!hasCondition(condition.id)"
                                 (click)="toggleCondition(condition)">
-                                {{ condition }}
+                                <mat-icon style="font-size: 10px; width: 10px; height: 10px;" [style.color]="condition.color">{{ condition.icon }}</mat-icon>
+                                {{ condition.name }}
                               </button>
                             }
                           </div>
@@ -237,15 +239,11 @@ export class GmPanelComponent {
   conditionCategories = [
     {
       name: 'Elementais',
-      conditions: ['Fogo', 'Gelo', 'Relâmpago', 'Ácido', 'Veneno']
+      conditions: AVAILABLE_CONDITIONS.filter(c => ['fire', 'cold', 'lightning', 'acid', 'poison', 'thunder', 'necrotic', 'radiant', 'force', 'psychic'].includes(c.id))
     },
     {
-      name: 'Transformações / Mentais',
-      conditions: ['Amaldiçoado', 'Zumbificando', 'Berserk/Fúria', 'Preso', 'Confuso', 'Dormindo', 'Petrificado']
-    },
-    {
-      name: 'Físicas / Status',
-      conditions: ['Caído', 'Cego', 'Surdo', 'Invisível', 'Exausto', 'Incapacitado', 'Paralisado']
+      name: 'Status D&D',
+      conditions: AVAILABLE_CONDITIONS.filter(c => ['blinded', 'charmed', 'deafened', 'frightened', 'grappled', 'incapacitated', 'invisible', 'paralyzed', 'petrified', 'prone', 'restrained', 'stunned', 'unconscious', 'exhaustion'].includes(c.id))
     }
   ];
 
@@ -255,13 +253,21 @@ export class GmPanelComponent {
     return this.combat.tokens().find(t => t.id === id) || null;
   });
 
-  toggleCondition(condition: string) {
+  hasCondition(conditionId: string): boolean {
+    const token = this.selectedToken();
+    if (!token) return false;
+    return (token.conditions || []).some(c => c.id === conditionId);
+  }
+
+  toggleCondition(condition: TokenCondition) {
     const token = this.selectedToken();
     if (!token) return;
     
     const conditions = token.conditions || [];
-    const newConditions = conditions.includes(condition)
-      ? conditions.filter(c => c !== condition)
+    const hasIt = conditions.some(c => c.id === condition.id);
+    
+    const newConditions = hasIt
+      ? conditions.filter(c => c.id !== condition.id)
       : [...conditions, condition];
       
     this.combat.updateToken(token.id, { conditions: newConditions });

@@ -2,6 +2,36 @@ import { Injectable, signal, inject } from '@angular/core';
 import { Ability } from '../models/ability';
 import { Token, CharacterSheet } from '../models/token';
 import { DndCoreEngineService, ActionResult } from './dnd-core-engine.service';
+import { ItemToken } from '../models/item-token';
+import { TokenCondition } from '../models/token';
+
+export const AVAILABLE_CONDITIONS: TokenCondition[] = [
+  { id: 'fire', name: 'Fogo', icon: 'local_fire_department', color: '#ef4444' },
+  { id: 'cold', name: 'Frio', icon: 'ac_unit', color: '#3b82f6' },
+  { id: 'lightning', name: 'Elétrico', icon: 'bolt', color: '#eab308' },
+  { id: 'acid', name: 'Ácido', icon: 'water_drop', color: '#22c55e' },
+  { id: 'poison', name: 'Veneno', icon: 'science', color: '#84cc16' },
+  { id: 'thunder', name: 'Trovejante', icon: 'volume_up', color: '#a8a29e' },
+  { id: 'necrotic', name: 'Necrótico', icon: 'sentiment_very_dissatisfied', color: '#7e22ce' },
+  { id: 'radiant', name: 'Radiante', icon: 'wb_sunny', color: '#fbbf24' },
+  { id: 'force', name: 'Força', icon: 'flare', color: '#a855f7' },
+  { id: 'psychic', name: 'Psíquico', icon: 'psychology', color: '#ec4899' },
+  
+  { id: 'blinded', name: 'Cego', icon: 'visibility_off', color: '#737373' },
+  { id: 'charmed', name: 'Enfeitiçado', icon: 'favorite', color: '#ec4899' },
+  { id: 'deafened', name: 'Surdo', icon: 'hearing_disabled', color: '#737373' },
+  { id: 'frightened', name: 'Amedrontado', icon: 'mood_bad', color: '#f59e0b' },
+  { id: 'grappled', name: 'Agarrado', icon: 'front_hand', color: '#d97706' },
+  { id: 'incapacitated', name: 'Incapacitado', icon: 'block', color: '#ef4444' },
+  { id: 'invisible', name: 'Invisível', icon: 'visibility_off', color: '#94a3b8' },
+  { id: 'paralyzed', name: 'Paralisado', icon: 'pan_tool', color: '#ef4444' },
+  { id: 'petrified', name: 'Petrificado', icon: 'imagesearch_roller', color: '#57534e' },
+  { id: 'prone', name: 'Caído', icon: 'airline_seat_flat', color: '#a8a29e' },
+  { id: 'restrained', name: 'Impedido', icon: 'lock', color: '#f43f5e' },
+  { id: 'stunned', name: 'Atordoado', icon: 'stars', color: '#eab308' },
+  { id: 'unconscious', name: 'Inconsciente', icon: 'bedtime', color: '#1e3a8a' },
+  { id: 'exhaustion', name: 'Exaustão', icon: 'battery_alert', color: '#dc2626' }
+];
 
 export interface CombatNotification {
   id: string;
@@ -43,6 +73,8 @@ export class CombatService {
   
   // Estado de Seleção e Visual (Novos)
   selectedTokenId = signal<string | null>(null);
+  selectedItemToken = signal<ItemToken | null>(null);
+  itemTokens = signal<ItemToken[]>([]);
   mapBackgroundImage = signal<string | null>(null); // URL da imagem de fundo
   showGrid = signal<boolean>(false); // Toggle grid visibility
   uiVisible = signal<boolean>(true); // Toggle all UI panels
@@ -107,7 +139,7 @@ export class CombatService {
       ]
     },
     { 
-      id: 't2', name: 'Maga Alice', x: 4, y: 5, hp: 22, maxHp: 22, mp: 30, maxMp: 30, conditions: ['Armadura Arcana'], controlledBy: 'user_player_2', color: '#3b82f6', type: 'player',
+      id: 't2', name: 'Maga Alice', x: 4, y: 5, hp: 22, maxHp: 22, mp: 30, maxMp: 30, conditions: [{ id: 'arcane_armor', name: 'Armadura Arcana', icon: 'shield', color: '#3b82f6' }], controlledBy: 'user_player_2', color: '#3b82f6', type: 'player',
       sheet: { class: 'Mago', level: 3, background: 'Sábio', playerName: 'Jogador 2', race: 'Elfo', alignment: 'Caótico e Bom', xp: 900, hitDie: 6, str: 8, dex: 14, con: 12, int: 16, wis: 13, cha: 10, ac: 12, initiative: 2, speed: 9, proficiencyBonus: 2, passivePerception: 11, hp: 22, maxHp: 22, mp: 30, maxMp: 30 },
       abilities: [
         { id: 'a2', name: 'Bola de Fogo', type: 'action', range: 45, areaShape: 'circle', radius: 6, damage: '8d6', damageType: 'fire', description: 'Um raio brilhante lampeja do seu dedo apontado para um ponto que você escolher dentro do alcance e então floresce com um rugido baixo em uma explosão de chamas.' },
@@ -115,7 +147,7 @@ export class CombatService {
       ]
     },
     { 
-      id: 't3', name: 'Chefe Goblin', x: 8, y: 3, hp: 15, maxHp: 25, mp: 0, maxMp: 0, conditions: ['Envenenado'], controlledBy: 'user_gm_1', color: '#22c55e', imageUrl: 'https://picsum.photos/seed/goblin/128/128', type: 'boss',
+      id: 't3', name: 'Chefe Goblin', x: 8, y: 3, hp: 15, maxHp: 25, mp: 0, maxMp: 0, conditions: [{ id: 'poison', name: 'Veneno', icon: 'science', color: '#84cc16' }], controlledBy: 'user_gm_1', color: '#22c55e', imageUrl: 'https://picsum.photos/seed/goblin/128/128', type: 'boss',
       sheet: { class: 'Chefe', level: 1, background: 'Monstro', playerName: 'Mestre', race: 'Goblin', alignment: 'Neutro e Mau', xp: 200, hitDie: 8, str: 14, dex: 14, con: 14, int: 10, wis: 10, cha: 10, ac: 15, initiative: 2, speed: 9, proficiencyBonus: 2, passivePerception: 10, hp: 15, maxHp: 25, mp: 0, maxMp: 0 },
       abilities: [
         { id: 'a4', name: 'Fenda Goblin', type: 'action', range: 1.5, areaShape: 'circle', radius: 1.5, damage: '2d6+2', damageType: 'slashing', description: 'Um ataque giratório selvagem atingindo todos por perto.', attackBonus: 4 }
@@ -334,7 +366,7 @@ export class CombatService {
     // 3. Verificar Condições do Alvo para Vantagem Automática
     let finalMode = mode;
     const advantageConditions = ['Atordoado', 'Cego', 'Incapacitado', 'Inconsciente', 'Paralisado', 'Petrificado', 'Impedido'];
-    if (target.conditions.some(c => advantageConditions.includes(c))) {
+    if (target.conditions.some(c => advantageConditions.includes(c.name))) {
       finalMode = 'advantage';
     }
 

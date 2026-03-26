@@ -55,7 +55,7 @@ export interface Token {
   maxHp: number;
   mp: number;
   maxMp: number;
-  conditions: string[];
+  conditions: TokenCondition[];
   controlledBy: string;
   color: string;
   imageUrl?: string;
