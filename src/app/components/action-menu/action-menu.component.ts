@@ -160,9 +160,9 @@ interface TestOption {
               </button>
             } @else {
               <div class="bg-stone-800 border border-stone-700 rounded p-3 animate-in fade-in slide-in-from-bottom-2">
-                <label class="block text-xs font-bold text-amber-500 mb-2 text-center">Digite o valor do d20</label>
+                <label for="manualD20Roll" class="block text-xs font-bold text-amber-500 mb-2 text-center">Digite o valor do d20</label>
                 <div class="flex gap-2">
-                  <input #manualInput type="number" 
+                  <input id="manualD20Roll" #manualInput type="number" 
                          [ngModel]="manualRollValue()" 
                          (ngModelChange)="manualRollValue.set($event)"
                          class="flex-1 bg-stone-900 border border-stone-600 rounded px-3 py-2 text-center font-mono font-bold text-lg focus:outline-none focus:border-amber-500"

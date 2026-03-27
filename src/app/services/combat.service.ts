@@ -79,6 +79,7 @@ export class CombatService {
   showGrid = signal<boolean>(false); // Toggle grid visibility
   uiVisible = signal<boolean>(true); // Toggle all UI panels
   gmPanelVisible = signal<boolean>(false); // Toggle GM panel
+  isPlayMode = signal<boolean>(false); // Toggle between GM and Play mode for GMs
   rightPanelTab = signal<'sheet' | 'inventory' | 'actions'>('sheet'); // Control right panel tab
   triggerEditSheet = signal<number>(0); // Trigger to open sheet edit mode
   

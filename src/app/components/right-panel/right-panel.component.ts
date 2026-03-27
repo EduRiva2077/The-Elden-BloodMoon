@@ -44,7 +44,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
       <div class="flex border-b border-stone-800 text-xs font-mono">
         <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'sheet'" [class.border-b-2]="combat.rightPanelTab() === 'sheet'" [class.border-amber-500]="combat.rightPanelTab() === 'sheet'" [class.bg-stone-800]="combat.rightPanelTab() === 'sheet'" (click)="combat.rightPanelTab.set('sheet')">Ficha</button>
         <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'inventory'" [class.border-b-2]="combat.rightPanelTab() === 'inventory'" [class.border-amber-500]="combat.rightPanelTab() === 'inventory'" [class.bg-stone-800]="combat.rightPanelTab() === 'inventory'" (click)="combat.rightPanelTab.set('inventory')">Inventário</button>
-        @if (auth.currentUser()?.role === 'GM') {
+        @if (auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) {
           <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'actions'" [class.border-b-2]="combat.rightPanelTab() === 'actions'" [class.border-amber-500]="combat.rightPanelTab() === 'actions'" [class.bg-stone-800]="combat.rightPanelTab() === 'actions'" (click)="combat.rightPanelTab.set('actions')">Ações</button>
         }
       </div>
@@ -72,7 +72,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                   <mat-icon style="font-size: 14px; width: 14px; height: 14px;">account_balance_wallet</mat-icon>
                   Carteira
                 </h4>
-                @if (auth.currentUser()?.role === 'GM' || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
                   <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="editSheet()" title="Editar Carteira">
                     <mat-icon style="font-size: 16px; width: 16px; height: 16px;">edit</mat-icon>
                   </button>
@@ -117,7 +117,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                     <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="isEditingInventory.set(false)" title="Cancelar">
                       <mat-icon style="font-size: 16px; width: 16px; height: 16px;">close</mat-icon>
                     </button>
-                  } @else if (auth.currentUser()?.role === 'GM' || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                  } @else if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
                     <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="isEditingInventory.set(true)" title="Editar Inventário">
                       <mat-icon style="font-size: 16px; width: 16px; height: 16px;">edit</mat-icon>
                     </button>
@@ -135,7 +135,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
             </div>
 
             <!-- GM: Add Ability Form -->
-            @if (auth.currentUser()?.role === 'GM' || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+            @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
               <div class="bg-stone-800 rounded border border-stone-700 p-3 mb-4 space-y-3 shadow-md mt-4">
                 <h4 class="text-xs font-bold text-amber-500 uppercase">Adicionar Arma, Magia ou Habilidade</h4>
                 <form [formGroup]="abilityForm" (ngSubmit)="addAbility()" class="space-y-2">
@@ -269,7 +269,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                           <div class="p-2 border-b border-stone-700 flex justify-between items-center bg-stone-800/50 cursor-pointer hover:bg-stone-700/50 transition-colors" (click)="selectAbilityForRoll(ability)">
                             <div class="flex items-center gap-2">
                               <span class="font-bold text-amber-500 text-sm">{{ ability.name }}</span>
-                              @if (auth.currentUser()?.role === 'GM' || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                              @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
                                 <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="removeAbility(ability.id); $event.stopPropagation()">
                                   <mat-icon style="font-size: 14px; width: 14px; height: 14px;">delete</mat-icon>
                                 </button>
@@ -409,7 +409,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                             <div class="flex items-center gap-2">
                               <span class="font-bold text-amber-500 text-sm">{{ ability.name }}</span>
                               <span class="text-[10px] bg-blue-900/50 text-blue-300 px-1 rounded border border-blue-700/50">Nível {{ ability.spellLevel || 0 }}</span>
-                              @if (auth.currentUser()?.role === 'GM' || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                              @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
                                 <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="removeAbility(ability.id); $event.stopPropagation()">
                                   <mat-icon style="font-size: 14px; width: 14px; height: 14px;">delete</mat-icon>
                                 </button>
@@ -551,7 +551,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                           <div class="p-2 border-b border-stone-700 flex justify-between items-center bg-stone-800/50 cursor-pointer hover:bg-stone-700/50 transition-colors" (click)="selectAbilityForRoll(ability)">
                             <div class="flex items-center gap-2">
                               <span class="font-bold text-amber-500 text-sm">{{ ability.name }}</span>
-                              @if (auth.currentUser()?.role === 'GM' || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                              @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
                                 <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="removeAbility(ability.id); $event.stopPropagation()">
                                   <mat-icon style="font-size: 14px; width: 14px; height: 14px;">delete</mat-icon>
                                 </button>
@@ -842,7 +842,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                 <div class="border-b border-stone-700 pb-2">
                   <div class="flex justify-between items-start">
                     <h3 class="font-bold text-amber-500 text-lg">{{ selectedToken()?.name }}</h3>
-                    @if (auth.currentUser()?.role === 'GM' || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                    @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
                       <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="editSheet()" title="Editar Ficha">
                         <mat-icon style="font-size: 16px; width: 16px; height: 16px;">edit</mat-icon>
                       </button>
@@ -954,7 +954,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                 <div class="space-y-2">
                   <div class="flex justify-between items-center">
                     <h4 class="text-xs font-bold text-amber-500 uppercase">Condições</h4>
-                    @if (auth.currentUser()?.role === 'GM' || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                    @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
                       <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="isEditingConditions.set(!isEditingConditions())" title="Editar Condições">
                         <mat-icon style="font-size: 16px; width: 16px; height: 16px;">{{ isEditingConditions() ? 'check' : 'edit' }}</mat-icon>
                       </button>
@@ -1212,6 +1212,18 @@ export class RightPanelComponent {
       if (trigger > 0) {
         untracked(() => {
           this.editSheet();
+        });
+      }
+    });
+
+    effect(() => {
+      const isPlayMode = this.combat.isPlayMode();
+      const currentTab = this.combat.rightPanelTab();
+      const userRole = this.auth.currentUser()?.role;
+
+      if (isPlayMode && currentTab === 'actions' && userRole === 'GM') {
+        untracked(() => {
+          this.combat.rightPanelTab.set('sheet');
         });
       }
     });

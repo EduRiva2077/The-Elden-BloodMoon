@@ -60,8 +60,8 @@ import { Ability } from '../../models/ability';
                 @for (cell of combat.fogOfWar(); track cell) {
                   @let coords = getCoords(cell);
                   <div class="absolute bg-black transition-opacity duration-300"
-                       [class.opacity-100]="currentUser()?.role !== 'GM'"
-                       [class.opacity-60]="currentUser()?.role === 'GM'"
+                       [class.opacity-100]="currentUser()?.role !== 'GM' || combat.isPlayMode()"
+                       [class.opacity-60]="currentUser()?.role === 'GM' && !combat.isPlayMode()"
                        [style.left.px]="coords.x * gridSize"
                        [style.top.px]="coords.y * gridSize"
                        [style.width.px]="gridSize"
@@ -112,8 +112,8 @@ import { Ability } from '../../models/ability';
               @if (!isTokenHiddenByFog(token)) {
                 <div class="absolute top-0 left-0 shadow-lg border-2 flex flex-col items-center justify-center transition-shadow hover:shadow-amber-500/50 z-30 group"
                      tabindex="0"
-                     [class.opacity-40]="isTokenInFog(token) && currentUser()?.role === 'GM' && token.type !== 'player'"
-                     [class.grayscale]="isTokenInFog(token) && currentUser()?.role === 'GM' && token.type !== 'player'"
+                     [class.opacity-40]="isTokenInFog(token) && currentUser()?.role === 'GM' && !combat.isPlayMode() && token.type !== 'player'"
+                     [class.grayscale]="isTokenInFog(token) && currentUser()?.role === 'GM' && !combat.isPlayMode() && token.type !== 'player'"
                      [class.rounded-full]="token.type !== 'item'"
                      [class.rounded-md]="token.type === 'item'"
                      [class.cursor-grab]="canMove(token)"
@@ -333,7 +333,7 @@ export class GridComponent {
   }
 
   isTokenHiddenByFog(token: Token): boolean {
-    if (this.currentUser()?.role === 'GM') return false; // GM always sees everything
+    if (this.currentUser()?.role === 'GM' && !this.combat.isPlayMode()) return false; // GM always sees everything unless in Play mode
     if (token.type === 'player') return false; // Players can always see other players for now
     return this.isTokenInFog(token);
   }
