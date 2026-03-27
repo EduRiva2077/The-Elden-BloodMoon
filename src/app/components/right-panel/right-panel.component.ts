@@ -4,7 +4,7 @@ import { DndMathService } from '../../services/dnd-math.service';
 import { CombatService, AVAILABLE_CONDITIONS } from '../../services/combat.service';
 import { AuthService } from '../../services/auth.service';
 import { Ability, AreaShape } from '../../models/ability';
-import { TokenCondition } from '../../models/token';
+import { TokenCondition, CharacterSheet } from '../../models/token';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { ActionMenuComponent } from '../action-menu/action-menu.component';
@@ -42,9 +42,11 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
 
       <!-- Tabs -->
       <div class="flex border-b border-stone-800 text-xs font-mono">
-        <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'sheet'" [class.border-b-2]="combat.rightPanelTab() === 'sheet'" [class.border-amber-500]="combat.rightPanelTab() === 'sheet'" [class.bg-stone-800]="combat.rightPanelTab() === 'sheet'" (click)="combat.rightPanelTab.set('sheet')">Ficha</button>
+        @if (selectedToken()?.type !== 'item') {
+          <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'sheet'" [class.border-b-2]="combat.rightPanelTab() === 'sheet'" [class.border-amber-500]="combat.rightPanelTab() === 'sheet'" [class.bg-stone-800]="combat.rightPanelTab() === 'sheet'" (click)="combat.rightPanelTab.set('sheet')">Ficha</button>
+        }
         <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'inventory'" [class.border-b-2]="combat.rightPanelTab() === 'inventory'" [class.border-amber-500]="combat.rightPanelTab() === 'inventory'" [class.bg-stone-800]="combat.rightPanelTab() === 'inventory'" (click)="combat.rightPanelTab.set('inventory')">Inventário</button>
-        @if (auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) {
+        @if (auth.currentUser()?.role === 'GM' && !combat.isPlayMode() && selectedToken()?.type !== 'item') {
           <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'actions'" [class.border-b-2]="combat.rightPanelTab() === 'actions'" [class.border-amber-500]="combat.rightPanelTab() === 'actions'" [class.bg-stone-800]="combat.rightPanelTab() === 'actions'" (click)="combat.rightPanelTab.set('actions')">Ações</button>
         }
       </div>
@@ -65,86 +67,147 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
               Selecione um token no mapa para ver seus equipamentos e magias.
             </div>
           } @else {
-            <!-- Wallet (Carteira) -->
-            <div class="bg-stone-800 rounded border border-stone-700 p-3 shadow-md">
-              <div class="flex justify-between items-center mb-2">
-                <h4 class="text-xs font-bold text-amber-500 uppercase flex items-center gap-1">
-                  <mat-icon style="font-size: 14px; width: 14px; height: 14px;">account_balance_wallet</mat-icon>
-                  Carteira
-                </h4>
-                @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
-                  <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="editSheet()" title="Editar Carteira">
-                    <mat-icon style="font-size: 16px; width: 16px; height: 16px;">edit</mat-icon>
-                  </button>
-                }
+            @if (selectedToken()?.type === 'item') {
+              <!-- Item Details -->
+              <div class="bg-stone-800 rounded border border-stone-700 p-3 shadow-md mb-4">
+                <div class="flex justify-between items-center mb-2">
+                  <h4 class="text-xs font-bold text-amber-500 uppercase flex items-center gap-1">
+                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">info</mat-icon>
+                    Detalhes do Item
+                  </h4>
+                  <div class="flex gap-2">
+                    @if (isEditingInventory()) {
+                      <button class="text-stone-500 hover:text-green-500 transition-colors" (click)="saveItemDetails()" title="Salvar Detalhes">
+                        <mat-icon style="font-size: 16px; width: 16px; height: 16px;">check</mat-icon>
+                      </button>
+                      <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="isEditingInventory.set(false)" title="Cancelar">
+                        <mat-icon style="font-size: 16px; width: 16px; height: 16px;">close</mat-icon>
+                      </button>
+                    } @else if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                      <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="isEditingInventory.set(true)" title="Editar Detalhes">
+                        <mat-icon style="font-size: 16px; width: 16px; height: 16px;">edit</mat-icon>
+                      </button>
+                    }
+                  </div>
+                </div>
+                
+                <div class="space-y-3">
+                  <div class="flex items-center gap-2">
+                    <span class="text-[10px] text-stone-500 uppercase font-bold w-20">Valor (PO):</span>
+                    @if (isEditingInventory()) {
+                      <input type="number" [formControl]="itemValueControl" class="w-24 bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500 text-yellow-500 font-bold">
+                    } @else {
+                      <span class="text-xs font-bold text-yellow-500">{{ selectedToken()?.sheet?.gp || 0 }} PO</span>
+                    }
+                  </div>
+                  
+                  <div class="flex flex-col gap-1">
+                    <span class="text-[10px] text-stone-500 uppercase font-bold">Descrição:</span>
+                    @if (isEditingInventory()) {
+                      <textarea [formControl]="inventoryForm" rows="4" class="w-full bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500 resize-none text-stone-300"></textarea>
+                    } @else {
+                      <div class="bg-stone-900 p-2 rounded border border-stone-700 min-h-[60px] text-xs text-stone-300 whitespace-pre-wrap">
+                        {{ selectedToken()?.sheet?.backpack || 'Sem descrição.' }}
+                      </div>
+                    }
+                  </div>
+                </div>
               </div>
-              <div class="grid grid-cols-5 gap-1 text-center">
-                <div class="bg-stone-900 border border-stone-700 rounded p-1">
-                  <div class="text-[10px] text-stone-500 font-bold">PC</div>
-                  <div class="font-bold text-sm text-amber-700">{{ selectedToken()?.sheet?.cp || 0 }}</div>
-                </div>
-                <div class="bg-stone-900 border border-stone-700 rounded p-1">
-                  <div class="text-[10px] text-stone-500 font-bold">PP</div>
-                  <div class="font-bold text-sm text-stone-400">{{ selectedToken()?.sheet?.sp || 0 }}</div>
-                </div>
-                <div class="bg-stone-900 border border-stone-700 rounded p-1">
-                  <div class="text-[10px] text-stone-500 font-bold">PE</div>
-                  <div class="font-bold text-sm text-blue-300">{{ selectedToken()?.sheet?.ep || 0 }}</div>
-                </div>
-                <div class="bg-stone-900 border border-stone-700 rounded p-1">
-                  <div class="text-[10px] text-stone-500 font-bold">PO</div>
-                  <div class="font-bold text-sm text-yellow-500">{{ selectedToken()?.sheet?.gp || 0 }}</div>
-                </div>
-                <div class="bg-stone-900 border border-stone-700 rounded p-1">
-                  <div class="text-[10px] text-stone-500 font-bold">PL</div>
-                  <div class="font-bold text-sm text-slate-300">{{ selectedToken()?.sheet?.pp || 0 }}</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Inventory Section -->
-            <div class="bg-stone-800 rounded border border-stone-700 p-3 shadow-md">
-              <div class="flex justify-between items-center mb-2">
-                <h4 class="text-xs font-bold text-amber-500 uppercase flex items-center gap-1">
-                  <mat-icon style="font-size: 14px; width: 14px; height: 14px;">inventory_2</mat-icon>
-                  Mochila & Itens
-                </h4>
-                <div class="flex gap-2">
-                  @if (isEditingInventory()) {
-                    <button class="text-stone-500 hover:text-green-500 transition-colors" (click)="saveInventory()" title="Salvar Inventário">
-                      <mat-icon style="font-size: 16px; width: 16px; height: 16px;">check</mat-icon>
-                    </button>
-                    <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="isEditingInventory.set(false)" title="Cancelar">
-                      <mat-icon style="font-size: 16px; width: 16px; height: 16px;">close</mat-icon>
-                    </button>
-                  } @else if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
-                    <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="isEditingInventory.set(true)" title="Editar Inventário">
+            } @else {
+              <!-- Wallet (Carteira) -->
+              <div class="bg-stone-800 rounded border border-stone-700 p-3 shadow-md mb-4">
+                <div class="flex justify-between items-center mb-2">
+                  <h4 class="text-xs font-bold text-amber-500 uppercase flex items-center gap-1">
+                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">account_balance_wallet</mat-icon>
+                    Carteira
+                  </h4>
+                  @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                    <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="editSheet()" title="Editar Carteira">
                       <mat-icon style="font-size: 16px; width: 16px; height: 16px;">edit</mat-icon>
                     </button>
                   }
                 </div>
-              </div>
-              @if (isEditingInventory()) {
-                <textarea [formControl]="inventoryForm" rows="5" class="w-full bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500 resize-none text-stone-300"></textarea>
-              } @else {
-                <div class="bg-stone-900 p-2 rounded border border-stone-700 min-h-[60px] text-xs text-stone-300 whitespace-pre-wrap flex items-start gap-2">
-                  <mat-icon class="text-stone-500 mt-0.5" style="font-size: 12px; width: 12px; height: 12px;">description</mat-icon>
-                  {{ selectedToken()?.sheet?.backpack || 'Inventário vazio.' }}
+                <div class="grid grid-cols-5 gap-1 text-center">
+                  <div class="bg-stone-900 border border-stone-700 rounded p-1">
+                    <div class="text-[10px] text-stone-500 font-bold">PC</div>
+                    <div class="font-bold text-sm text-amber-700">{{ selectedToken()?.sheet?.cp || 0 }}</div>
+                  </div>
+                  <div class="bg-stone-900 border border-stone-700 rounded p-1">
+                    <div class="text-[10px] text-stone-500 font-bold">PP</div>
+                    <div class="font-bold text-sm text-stone-400">{{ selectedToken()?.sheet?.sp || 0 }}</div>
+                  </div>
+                  <div class="bg-stone-900 border border-stone-700 rounded p-1">
+                    <div class="text-[10px] text-stone-500 font-bold">PE</div>
+                    <div class="font-bold text-sm text-blue-300">{{ selectedToken()?.sheet?.ep || 0 }}</div>
+                  </div>
+                  <div class="bg-stone-900 border border-stone-700 rounded p-1">
+                    <div class="text-[10px] text-stone-500 font-bold">PO</div>
+                    <div class="font-bold text-sm text-yellow-500">{{ selectedToken()?.sheet?.gp || 0 }}</div>
+                  </div>
+                  <div class="bg-stone-900 border border-stone-700 rounded p-1">
+                    <div class="text-[10px] text-stone-500 font-bold">PL</div>
+                    <div class="font-bold text-sm text-slate-300">{{ selectedToken()?.sheet?.pp || 0 }}</div>
+                  </div>
                 </div>
-              }
-            </div>
+              </div>
+
+              <!-- Inventory Section -->
+              <div class="bg-stone-800 rounded border border-stone-700 p-3 shadow-md mb-4">
+                <div class="flex justify-between items-center mb-2">
+                  <h4 class="text-xs font-bold text-amber-500 uppercase flex items-center gap-1">
+                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">inventory_2</mat-icon>
+                    Mochila & Itens
+                  </h4>
+                  <div class="flex gap-2">
+                    @if (isEditingInventory()) {
+                      <button class="text-stone-500 hover:text-green-500 transition-colors" (click)="saveInventory()" title="Salvar Inventário">
+                        <mat-icon style="font-size: 16px; width: 16px; height: 16px;">check</mat-icon>
+                      </button>
+                      <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="isEditingInventory.set(false)" title="Cancelar">
+                        <mat-icon style="font-size: 16px; width: 16px; height: 16px;">close</mat-icon>
+                      </button>
+                    } @else if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                      <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="isEditingInventory.set(true)" title="Editar Inventário">
+                        <mat-icon style="font-size: 16px; width: 16px; height: 16px;">edit</mat-icon>
+                      </button>
+                    }
+                  </div>
+                </div>
+                @if (isEditingInventory()) {
+                  <textarea [formControl]="inventoryForm" rows="5" class="w-full bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500 resize-none text-stone-300"></textarea>
+                } @else {
+                  <div class="bg-stone-900 p-2 rounded border border-stone-700 min-h-[60px] text-xs text-stone-300 whitespace-pre-wrap flex items-start gap-2">
+                    <mat-icon class="text-stone-500 mt-0.5" style="font-size: 12px; width: 12px; height: 12px;">description</mat-icon>
+                    {{ selectedToken()?.sheet?.backpack || 'Inventário vazio.' }}
+                  </div>
+                }
+              </div>
+            }
 
             <!-- GM: Add Ability Form -->
             @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
               <div class="bg-stone-800 rounded border border-stone-700 p-3 mb-4 space-y-3 shadow-md mt-4">
-                <h4 class="text-xs font-bold text-amber-500 uppercase">Adicionar Arma, Magia ou Habilidade</h4>
+                <h4 class="text-xs font-bold text-amber-500 uppercase">
+                  @if (selectedToken()?.type === 'item') {
+                    Adicionar Funcionalidade do Item
+                  } @else {
+                    Adicionar Arma, Magia ou Habilidade
+                  }
+                </h4>
                 <form [formGroup]="abilityForm" (ngSubmit)="addAbility()" class="space-y-2">
                   <div class="grid grid-cols-2 gap-2">
                     <input formControlName="name" placeholder="Nome" class="w-full bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
                     <select formControlName="category" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
-                      <option value="weapon">Arma</option>
-                      <option value="spell">Magia</option>
-                      <option value="feature">Habilidade</option>
+                      @if (selectedToken()?.type === 'item') {
+                        <option value="item_effect">Efeito do Item</option>
+                        <option value="weapon">Ataque</option>
+                        <option value="spell">Magia</option>
+                        <option value="feature">Habilidade</option>
+                      } @else {
+                        <option value="weapon">Arma</option>
+                        <option value="spell">Magia</option>
+                        <option value="feature">Habilidade</option>
+                      }
                     </select>
                   </div>
                   
@@ -201,12 +264,14 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                     </div>
                   </div>
 
-                  @if (abilityForm.get('category')?.value === 'spell') {
+                  @if (abilityForm.get('category')?.value === 'spell' || abilityForm.get('category')?.value === 'item_effect') {
                     <div class="grid grid-cols-2 gap-2">
-                      <div class="flex flex-col gap-1">
-                        <label for="spellLevel" class="text-[10px] text-stone-500 uppercase">Nível da Magia</label>
-                        <input id="spellLevel" type="number" formControlName="spellLevel" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
-                      </div>
+                      @if (abilityForm.get('category')?.value === 'spell') {
+                        <div class="flex flex-col gap-1">
+                          <label for="spellLevel" class="text-[10px] text-stone-500 uppercase">Nível da Magia</label>
+                          <input id="spellLevel" type="number" formControlName="spellLevel" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
+                        </div>
+                      }
                       <div class="flex flex-col gap-1">
                         <label for="manaCost" class="text-[10px] text-stone-500 uppercase">Custo de Mana</label>
                         <input id="manaCost" type="number" formControlName="manaCost" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
@@ -236,27 +301,37 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
             <!-- Abilities Section with Sub-tabs -->
             <div class="mt-6 border border-stone-700 rounded overflow-hidden bg-stone-900/30">
               <div class="flex border-b border-stone-700 bg-stone-900/50">
-                    <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors flex items-center justify-center gap-1"
-                            [class.text-amber-500]="inventorySubTab() === 'weapons'"
-                            [class.bg-stone-800]="inventorySubTab() === 'weapons'"
-                            (click)="inventorySubTab.set('weapons')">
-                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">shield</mat-icon>
-                      Armas
-                    </button>
-                    <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors border-l border-stone-700 flex items-center justify-center gap-1"
-                            [class.text-amber-500]="inventorySubTab() === 'spells'"
-                            [class.bg-stone-800]="inventorySubTab() === 'spells'"
-                            (click)="inventorySubTab.set('spells')">
-                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">auto_fix_high</mat-icon>
-                      Magias
-                    </button>
-                    <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors border-l border-stone-700 flex items-center justify-center gap-1"
-                            [class.text-amber-500]="inventorySubTab() === 'features'"
-                            [class.bg-stone-800]="inventorySubTab() === 'features'"
-                            (click)="inventorySubTab.set('features')">
-                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">star</mat-icon>
-                      Habilidades
-                    </button>
+                    @if (selectedToken()?.type === 'item') {
+                      <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors flex items-center justify-center gap-1"
+                              [class.text-amber-500]="inventorySubTab() === 'features'"
+                              [class.bg-stone-800]="inventorySubTab() === 'features'"
+                              (click)="inventorySubTab.set('features')">
+                        <mat-icon style="font-size: 14px; width: 14px; height: 14px;">star</mat-icon>
+                        Efeitos
+                      </button>
+                    } @else {
+                      <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors flex items-center justify-center gap-1"
+                              [class.text-amber-500]="inventorySubTab() === 'weapons'"
+                              [class.bg-stone-800]="inventorySubTab() === 'weapons'"
+                              (click)="inventorySubTab.set('weapons')">
+                        <mat-icon style="font-size: 14px; width: 14px; height: 14px;">shield</mat-icon>
+                        Armas
+                      </button>
+                      <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors border-l border-stone-700 flex items-center justify-center gap-1"
+                              [class.text-amber-500]="inventorySubTab() === 'spells'"
+                              [class.bg-stone-800]="inventorySubTab() === 'spells'"
+                              (click)="inventorySubTab.set('spells')">
+                        <mat-icon style="font-size: 14px; width: 14px; height: 14px;">auto_fix_high</mat-icon>
+                        Magias
+                      </button>
+                      <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors border-l border-stone-700 flex items-center justify-center gap-1"
+                              [class.text-amber-500]="inventorySubTab() === 'features'"
+                              [class.bg-stone-800]="inventorySubTab() === 'features'"
+                              (click)="inventorySubTab.set('features')">
+                        <mat-icon style="font-size: 14px; width: 14px; height: 14px;">star</mat-icon>
+                        Habilidades
+                      </button>
+                    }
               </div>
 
               <div class="p-3 space-y-4">
@@ -542,8 +617,146 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                   }
                 }
 
+                <!-- Item Effects List -->
+                @if (inventorySubTab() === 'features' && selectedToken()?.type === 'item') {
+                  @if (itemEffects().length > 0) {
+                    <div class="space-y-3">
+                      @for (ability of itemEffects(); track ability.id) {
+                        <div class="bg-stone-800 rounded border border-stone-700 overflow-hidden shadow-md">
+                          <div class="p-2 border-b border-stone-700 flex justify-between items-center bg-stone-800/50 cursor-pointer hover:bg-stone-700/50 transition-colors" (click)="selectAbilityForRoll(ability)">
+                            <div class="flex items-center gap-2">
+                              <span class="font-bold text-amber-500 text-sm">{{ ability.name }}</span>
+                              @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                                <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="removeAbility(ability.id); $event.stopPropagation()">
+                                  <mat-icon style="font-size: 14px; width: 14px; height: 14px;">delete</mat-icon>
+                                </button>
+                              }
+                            </div>
+                            <span class="text-[10px] font-mono text-stone-400 uppercase bg-stone-900 px-2 py-1 rounded">{{ ability.type }}</span>
+                          </div>
+                          <div class="p-2 text-xs space-y-2">
+                            <div class="flex gap-2 font-mono flex-wrap mb-2">
+                              @if (ability.healing) {
+                                <span class="bg-stone-900 px-2 py-1 rounded border border-green-700 text-green-500">Recup. PV: {{ ability.healing }}</span>
+                              }
+                              @if (ability.damage) {
+                                <span class="bg-stone-900 px-2 py-1 rounded border border-red-700 text-red-500">Dano: {{ ability.damage }}</span>
+                              }
+                              @if (ability.manaCost) {
+                                <span class="bg-stone-900 px-2 py-1 rounded border border-blue-700 text-blue-400">Custo: {{ ability.manaCost }} MP</span>
+                              }
+                            </div>
+                            @if (ability.description) {
+                              <p class="text-stone-400">{{ ability.description }}</p>
+                            }
+
+                            @if (selectedAbilityForRoll()?.id === ability.id) {
+                              <div class="mt-3 p-3 bg-stone-900 rounded border border-stone-700 space-y-3 animate-in fade-in slide-in-from-top-2">
+                                
+                                <!-- Attack Roll -->
+                                <div>
+                                  @if (!isManualRollingAttack()) {
+                                    <button (click)="startManualAbilityRoll('attack')" class="w-full py-1.5 bg-amber-600 hover:bg-amber-500 text-stone-900 font-bold rounded shadow-lg transition-colors flex items-center justify-center gap-2">
+                                      <mat-icon style="font-size: 16px; width: 16px; height: 16px;">casino</mat-icon>
+                                      ROLAR ATAQUE (d20)
+                                    </button>
+                                  } @else {
+                                    <div class="bg-stone-800 border border-stone-700 rounded p-2">
+                                      <label class="block text-[10px] font-bold text-amber-500 mb-1 text-center">Digite o valor do d20</label>
+                                      <div class="flex gap-1">
+                                        <input type="number" 
+                                               [ngModel]="manualAttackRollValue()" 
+                                               (ngModelChange)="manualAttackRollValue.set($event)"
+                                               class="flex-1 bg-stone-900 border border-stone-600 rounded px-2 py-1 text-center font-mono font-bold text-sm focus:outline-none focus:border-amber-500"
+                                               placeholder="1 a 20"
+                                               (keyup.enter)="confirmAbilityRoll('attack')">
+                                        <button (click)="confirmAbilityRoll('attack')" class="bg-green-600 hover:bg-green-500 text-white px-2 rounded font-bold transition-colors text-xs">OK</button>
+                                        <button (click)="cancelManualAbilityRoll()" class="bg-stone-700 hover:bg-stone-600 text-white px-2 rounded transition-colors"><mat-icon style="font-size: 14px; width: 14px; height: 14px;">close</mat-icon></button>
+                                      </div>
+                                    </div>
+                                  }
+                                  @if (lastAbilityResult()?.attack; as atk) {
+                                    <div class="mt-2 p-2 rounded border bg-stone-800 border-stone-600">
+                                      <div class="flex items-center justify-between mb-1">
+                                        <span class="font-bold text-sm" [class.text-green-400]="atk.success" [class.text-red-400]="!atk.success">
+                                          {{ atk.success ? 'SUCESSO!' : 'FALHA...' }}
+                                        </span>
+                                        <span class="font-mono font-bold text-lg text-stone-200">{{ atk.roll.total }}</span>
+                                      </div>
+                                      <div class="text-[10px] text-stone-400 font-mono break-words leading-tight">{{ atk.roll.log }}</div>
+                                      @if (atk.roll.isCritical) { <div class="mt-1 text-[10px] font-bold text-amber-400 uppercase tracking-widest text-center">Sucesso Crítico!</div> }
+                                      @if (atk.roll.isCriticalFail) { <div class="mt-1 text-[10px] font-bold text-red-500 uppercase tracking-widest text-center">Falha Crítica!</div> }
+                                    </div>
+                                  }
+                                </div>
+
+                                <!-- Damage/Healing Roll -->
+                                @if (ability.damage || ability.healing) {
+                                  <div>
+                                    @if (!isManualRollingDamage()) {
+                                      <button (click)="startManualAbilityRoll('damage')" class="w-full py-1.5 bg-red-800 hover:bg-red-700 text-stone-200 font-bold rounded shadow-lg transition-colors flex items-center justify-center gap-2">
+                                        <mat-icon style="font-size: 16px; width: 16px; height: 16px;">bloodtype</mat-icon>
+                                        ROLAR {{ ability.damage ? 'DANO' : 'CURA' }} ({{ ability.damage || ability.healing }})
+                                      </button>
+                                    } @else {
+                                      <div class="bg-stone-800 border border-stone-700 rounded p-2">
+                                        <label class="block text-[10px] font-bold text-red-400 mb-1 text-center">Digite o valor do {{ ability.damage || ability.healing }}</label>
+                                        <div class="flex gap-1">
+                                          <input type="number" 
+                                                 [ngModel]="manualDamageRollValue()" 
+                                                 (ngModelChange)="manualDamageRollValue.set($event)"
+                                                 class="flex-1 bg-stone-900 border border-stone-600 rounded px-2 py-1 text-center font-mono font-bold text-sm focus:outline-none focus:border-red-500"
+                                                 placeholder="Valor"
+                                                 (keyup.enter)="confirmAbilityRoll('damage')">
+                                          <button (click)="confirmAbilityRoll('damage')" class="bg-green-600 hover:bg-green-500 text-white px-2 rounded font-bold transition-colors text-xs">OK</button>
+                                          <button (click)="cancelManualAbilityRoll()" class="bg-stone-700 hover:bg-stone-600 text-white px-2 rounded transition-colors"><mat-icon style="font-size: 14px; width: 14px; height: 14px;">close</mat-icon></button>
+                                        </div>
+                                      </div>
+                                    }
+                                    @if (lastAbilityResult()?.damage; as dmg) {
+                                      <div class="mt-2 p-2 rounded border bg-red-900/20 border-red-500/50">
+                                        <div class="flex items-center justify-between mb-1">
+                                          <span class="font-bold text-sm text-red-400">DANO</span>
+                                          <span class="font-mono font-bold text-lg text-stone-200">{{ dmg.total }}</span>
+                                        </div>
+                                        <div class="text-[10px] text-stone-400 font-mono break-words leading-tight">{{ dmg.log }}</div>
+                                      </div>
+                                    }
+                                    @if (lastAbilityResult()?.healing; as heal) {
+                                      <div class="mt-2 p-2 rounded border bg-green-900/20 border-green-500/50">
+                                        <div class="flex items-center justify-between mb-1">
+                                          <span class="font-bold text-sm text-green-400">CURA</span>
+                                          <span class="font-mono font-bold text-lg text-stone-200">{{ heal.total }}</span>
+                                        </div>
+                                        <div class="text-[10px] text-stone-400 font-mono break-words leading-tight">{{ heal.log }}</div>
+                                      </div>
+                                    }
+                                  </div>
+                                }
+                                
+                                @if (rollError()) {
+                                  <p class="text-red-400 text-[10px] text-center">{{ rollError() }}</p>
+                                }
+                              </div>
+                            }
+
+                            @if (ability.type !== 'passive') {
+                              <button class="w-full py-1 bg-stone-700 hover:bg-amber-600 hover:text-stone-900 text-stone-300 font-bold rounded transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:hover:bg-stone-700 disabled:hover:text-stone-300 disabled:cursor-not-allowed mt-2"
+                                      (click)="useAbility(ability)">
+                                <mat-icon class="text-sm">my_location</mat-icon> Usar Efeito no Mapa
+                              </button>
+                            }
+                          </div>
+                        </div>
+                      }
+                    </div>
+                  } @else {
+                    <p class="text-[10px] text-stone-500 italic text-center py-4">Nenhum efeito configurado.</p>
+                  }
+                }
+
                 <!-- Features List -->
-                @if (inventorySubTab() === 'features') {
+                @if (inventorySubTab() === 'features' && selectedToken()?.type !== 'item') {
                   @if (features().length > 0) {
                     <div class="space-y-3">
                       @for (ability of features(); track ability.id) {
@@ -1169,6 +1382,7 @@ export class RightPanelComponent {
   inventorySubTab = signal<'weapons' | 'spells' | 'features'>('weapons');
   isEditingInventory = signal(false);
   inventoryForm = new FormControl('', { nonNullable: true });
+  itemValueControl = new FormControl(0, { nonNullable: true });
 
   selectedAbilityForRoll = signal<Ability | null>(null);
   isManualRollingAttack = signal<boolean>(false);
@@ -1203,6 +1417,19 @@ export class RightPanelComponent {
         this.isEditingInventory.set(false);
         if (token?.sheet) {
           this.inventoryForm.setValue(token.sheet.backpack || '');
+          this.itemValueControl.setValue(token.sheet.gp || 0);
+        }
+        
+        // Auto-switch tab if item is selected
+        if (token?.type === 'item') {
+          if (this.combat.rightPanelTab() !== 'inventory') {
+            this.combat.rightPanelTab.set('inventory');
+          }
+          this.abilityForm.patchValue({ category: 'item_effect' });
+        } else {
+          if (this.abilityForm.get('category')?.value === 'item_effect') {
+             this.abilityForm.patchValue({ category: 'feature' });
+          }
         }
       });
     });
@@ -1273,7 +1500,7 @@ export class RightPanelComponent {
     healing: new FormControl('', { nonNullable: true }),
     description: new FormControl('', { nonNullable: true }),
     attackBonus: new FormControl(0, { nonNullable: true }),
-    category: new FormControl<'weapon' | 'spell' | 'feature'>('feature', { nonNullable: true }),
+    category: new FormControl<'weapon' | 'spell' | 'feature' | 'item_effect'>('feature', { nonNullable: true }),
     spellLevel: new FormControl(0, { nonNullable: true }),
     uses: new FormControl(0, { nonNullable: true }),
     maxUses: new FormControl(0, { nonNullable: true }),
@@ -1294,6 +1521,7 @@ export class RightPanelComponent {
   weapons = computed(() => this.abilities().filter(a => a.category === 'weapon'));
   spells = computed(() => this.abilities().filter(a => a.category === 'spell'));
   features = computed(() => this.abilities().filter(a => !a.category || a.category === 'feature'));
+  itemEffects = computed(() => this.abilities().filter(a => a.category === 'item_effect'));
 
   hasCondition(conditionId: string): boolean {
     const token = this.selectedToken();
@@ -1323,7 +1551,7 @@ export class RightPanelComponent {
 
     const formValue = this.abilityForm.getRawValue();
     const newAbility: Ability = {
-      ...formValue,
+      ...(formValue as any),
       damage: this.showDamageField() ? formValue.damage : '',
       healing: this.showHealingField() ? formValue.healing : '',
       id: Math.random().toString(36).substring(2, 9),
@@ -1346,7 +1574,7 @@ export class RightPanelComponent {
       damageType: 'slashing',
       description: '',
       attackBonus: 0,
-      category: 'feature',
+      category: token.type === 'item' ? 'item_effect' : 'feature',
       spellLevel: 0,
       uses: 0,
       maxUses: 0,
@@ -1546,11 +1774,41 @@ export class RightPanelComponent {
 
   saveInventory() {
     const token = this.selectedToken();
-    if (!token || !token.sheet) return;
+    if (!token) return;
 
     const backpack = this.inventoryForm.value;
+    
+    // Create a default sheet if it doesn't exist to satisfy the type
+    const currentSheet = token.sheet || {
+      class: '', level: 1, background: '', playerName: '', race: '', alignment: '', xp: 0, hitDie: 10,
+      str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10,
+      ac: 10, initiative: 0, speed: 9, proficiencyBonus: 2, passivePerception: 10,
+      hp: token.hp, maxHp: token.maxHp, mp: token.mp, maxMp: token.maxMp
+    };
+
     this.combat.updateToken(token.id, { 
-      sheet: { ...token.sheet, backpack } 
+      sheet: { ...currentSheet, backpack } as CharacterSheet
+    });
+    this.isEditingInventory.set(false);
+  }
+
+  saveItemDetails() {
+    const token = this.selectedToken();
+    if (!token) return;
+
+    const backpack = this.inventoryForm.value;
+    const gp = this.itemValueControl.value;
+    
+    // Create a default sheet if it doesn't exist to satisfy the type
+    const currentSheet = token.sheet || {
+      class: '', level: 1, background: '', playerName: '', race: '', alignment: '', xp: 0, hitDie: 10,
+      str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10,
+      ac: 10, initiative: 0, speed: 9, proficiencyBonus: 2, passivePerception: 10,
+      hp: token.hp, maxHp: token.maxHp, mp: token.mp, maxMp: token.maxMp
+    };
+
+    this.combat.updateToken(token.id, { 
+      sheet: { ...currentSheet, backpack, gp } as CharacterSheet
     });
     this.isEditingInventory.set(false);
   }

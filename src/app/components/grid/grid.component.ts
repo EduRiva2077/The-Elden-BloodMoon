@@ -135,7 +135,6 @@ import { Ability } from '../../models/ability';
                      [style.height.px]="gridSize"
                      [cdkDragFreeDragPosition]="{x: token.x * gridSize, y: token.y * gridSize}"
                      cdkDrag
-                     [cdkDragBoundary]="boundary"
                      [cdkDragDisabled]="!canMove(token)"
                      (cdkDragEnded)="onDragEnded($event, token)"
                      (click)="onTokenClick(token, $event)"
@@ -685,10 +684,12 @@ export class GridComponent {
       return;
     }
 
-    const dropPoint = event.source.getFreeDragPosition();
-    // Drag point is already in local coordinates relative to boundary
-    const currentPixelX = dropPoint.x;
-    const currentPixelY = dropPoint.y;
+    // Calculate new position based on distance dragged and current zoom
+    const distanceX = event.distance.x / this.combat.zoom();
+    const distanceY = event.distance.y / this.combat.zoom();
+    
+    const currentPixelX = (token.x * this.gridSize) + distanceX;
+    const currentPixelY = (token.y * this.gridSize) + distanceY;
     
     let newGridX = Math.round(currentPixelX / this.gridSize);
     let newGridY = Math.round(currentPixelY / this.gridSize);
