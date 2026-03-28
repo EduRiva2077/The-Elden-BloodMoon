@@ -46,7 +46,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
           <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'sheet'" [class.border-b-2]="combat.rightPanelTab() === 'sheet'" [class.border-amber-500]="combat.rightPanelTab() === 'sheet'" [class.bg-stone-800]="combat.rightPanelTab() === 'sheet'" (click)="combat.rightPanelTab.set('sheet')">Ficha</button>
         }
         <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'inventory'" [class.border-b-2]="combat.rightPanelTab() === 'inventory'" [class.border-amber-500]="combat.rightPanelTab() === 'inventory'" [class.bg-stone-800]="combat.rightPanelTab() === 'inventory'" (click)="combat.rightPanelTab.set('inventory')">Inventário</button>
-        @if (auth.currentUser()?.role === 'GM' && !combat.isPlayMode() && selectedToken()?.type !== 'item') {
+        @if ((auth.currentUser()?.role === 'GM' || selectedToken()?.controlledBy === auth.currentUser()?.id) && selectedToken()?.type !== 'item') {
           <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'actions'" [class.border-b-2]="combat.rightPanelTab() === 'actions'" [class.border-amber-500]="combat.rightPanelTab() === 'actions'" [class.bg-stone-800]="combat.rightPanelTab() === 'actions'" (click)="combat.rightPanelTab.set('actions')">Ações</button>
         }
       </div>
@@ -341,7 +341,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                     <div class="space-y-3">
                       @for (ability of weapons(); track ability.id) {
                         <div class="bg-stone-800 rounded border border-stone-700 overflow-hidden shadow-md">
-                          <div class="p-2 border-b border-stone-700 flex justify-between items-center bg-stone-800/50 cursor-pointer hover:bg-stone-700/50 transition-colors" (click)="selectAbilityForRoll(ability)">
+                          <div class="p-2 border-b border-stone-700 flex justify-between items-center bg-stone-800/50 cursor-pointer hover:bg-stone-700/50 transition-colors" tabindex="0" (keyup.enter)="selectAbilityForRoll(ability)" (click)="selectAbilityForRoll(ability)">
                             <div class="flex items-center gap-2">
                               <span class="font-bold text-amber-500 text-sm">{{ ability.name }}</span>
                               @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
@@ -382,7 +382,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                                     </button>
                                   } @else {
                                     <div class="bg-stone-800 border border-stone-700 rounded p-2">
-                                      <label class="block text-[10px] font-bold text-amber-500 mb-1 text-center">Digite o valor do d20</label>
+                                      <div class="block text-[10px] font-bold text-amber-500 mb-1 text-center">Digite o valor do d20</div>
                                       <div class="flex gap-1">
                                         <input type="number" 
                                                [ngModel]="manualAttackRollValue()" 
@@ -420,7 +420,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                                       </button>
                                     } @else {
                                       <div class="bg-stone-800 border border-stone-700 rounded p-2">
-                                        <label class="block text-[10px] font-bold text-red-400 mb-1 text-center">Digite o valor do {{ ability.damage || ability.healing }}</label>
+                                        <div class="block text-[10px] font-bold text-red-400 mb-1 text-center">Digite o valor do {{ ability.damage || ability.healing }}</div>
                                         <div class="flex gap-1">
                                           <input type="number" 
                                                  [ngModel]="manualDamageRollValue()" 
@@ -480,7 +480,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                     <div class="space-y-3">
                       @for (ability of spells(); track ability.id) {
                         <div class="bg-stone-800 rounded border border-stone-700 overflow-hidden shadow-md">
-                          <div class="p-2 border-b border-stone-700 flex justify-between items-center bg-stone-800/50 cursor-pointer hover:bg-stone-700/50 transition-colors" (click)="selectAbilityForRoll(ability)">
+                          <div class="p-2 border-b border-stone-700 flex justify-between items-center bg-stone-800/50 cursor-pointer hover:bg-stone-700/50 transition-colors" tabindex="0" (keyup.enter)="selectAbilityForRoll(ability)" (click)="selectAbilityForRoll(ability)">
                             <div class="flex items-center gap-2">
                               <span class="font-bold text-amber-500 text-sm">{{ ability.name }}</span>
                               <span class="text-[10px] bg-blue-900/50 text-blue-300 px-1 rounded border border-blue-700/50">Nível {{ ability.spellLevel || 0 }}</span>
@@ -525,7 +525,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                                     </button>
                                   } @else {
                                     <div class="bg-stone-800 border border-stone-700 rounded p-2">
-                                      <label class="block text-[10px] font-bold text-amber-500 mb-1 text-center">Digite o valor do d20</label>
+                                      <div class="block text-[10px] font-bold text-amber-500 mb-1 text-center">Digite o valor do d20</div>
                                       <div class="flex gap-1">
                                         <input type="number" 
                                                [ngModel]="manualAttackRollValue()" 
@@ -563,7 +563,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                                       </button>
                                     } @else {
                                       <div class="bg-stone-800 border border-stone-700 rounded p-2">
-                                        <label class="block text-[10px] font-bold text-red-400 mb-1 text-center">Digite o valor do {{ ability.damage || ability.healing }}</label>
+                                        <div class="block text-[10px] font-bold text-red-400 mb-1 text-center">Digite o valor do {{ ability.damage || ability.healing }}</div>
                                         <div class="flex gap-1">
                                           <input type="number" 
                                                  [ngModel]="manualDamageRollValue()" 
@@ -623,7 +623,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                     <div class="space-y-3">
                       @for (ability of itemEffects(); track ability.id) {
                         <div class="bg-stone-800 rounded border border-stone-700 overflow-hidden shadow-md">
-                          <div class="p-2 border-b border-stone-700 flex justify-between items-center bg-stone-800/50 cursor-pointer hover:bg-stone-700/50 transition-colors" (click)="selectAbilityForRoll(ability)">
+                          <div class="p-2 border-b border-stone-700 flex justify-between items-center bg-stone-800/50 cursor-pointer hover:bg-stone-700/50 transition-colors" tabindex="0" (keyup.enter)="selectAbilityForRoll(ability)" (click)="selectAbilityForRoll(ability)">
                             <div class="flex items-center gap-2">
                               <span class="font-bold text-amber-500 text-sm">{{ ability.name }}</span>
                               @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
@@ -662,7 +662,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                                     </button>
                                   } @else {
                                     <div class="bg-stone-800 border border-stone-700 rounded p-2">
-                                      <label class="block text-[10px] font-bold text-amber-500 mb-1 text-center">Digite o valor do d20</label>
+                                      <div class="block text-[10px] font-bold text-amber-500 mb-1 text-center">Digite o valor do d20</div>
                                       <div class="flex gap-1">
                                         <input type="number" 
                                                [ngModel]="manualAttackRollValue()" 
@@ -700,7 +700,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                                       </button>
                                     } @else {
                                       <div class="bg-stone-800 border border-stone-700 rounded p-2">
-                                        <label class="block text-[10px] font-bold text-red-400 mb-1 text-center">Digite o valor do {{ ability.damage || ability.healing }}</label>
+                                        <div class="block text-[10px] font-bold text-red-400 mb-1 text-center">Digite o valor do {{ ability.damage || ability.healing }}</div>
                                         <div class="flex gap-1">
                                           <input type="number" 
                                                  [ngModel]="manualDamageRollValue()" 
@@ -761,7 +761,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                     <div class="space-y-3">
                       @for (ability of features(); track ability.id) {
                         <div class="bg-stone-800 rounded border border-stone-700 overflow-hidden shadow-md">
-                          <div class="p-2 border-b border-stone-700 flex justify-between items-center bg-stone-800/50 cursor-pointer hover:bg-stone-700/50 transition-colors" (click)="selectAbilityForRoll(ability)">
+                          <div class="p-2 border-b border-stone-700 flex justify-between items-center bg-stone-800/50 cursor-pointer hover:bg-stone-700/50 transition-colors" tabindex="0" (keyup.enter)="selectAbilityForRoll(ability)" (click)="selectAbilityForRoll(ability)">
                             <div class="flex items-center gap-2">
                               <span class="font-bold text-amber-500 text-sm">{{ ability.name }}</span>
                               @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
@@ -797,7 +797,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                                     </button>
                                   } @else {
                                     <div class="bg-stone-800 border border-stone-700 rounded p-2">
-                                      <label class="block text-[10px] font-bold text-amber-500 mb-1 text-center">Digite o valor do d20</label>
+                                      <div class="block text-[10px] font-bold text-amber-500 mb-1 text-center">Digite o valor do d20</div>
                                       <div class="flex gap-1">
                                         <input type="number" 
                                                [ngModel]="manualAttackRollValue()" 
@@ -835,7 +835,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                                       </button>
                                     } @else {
                                       <div class="bg-stone-800 border border-stone-700 rounded p-2">
-                                        <label class="block text-[10px] font-bold text-red-400 mb-1 text-center">Digite o valor do {{ ability.damage || ability.healing }}</label>
+                                        <div class="block text-[10px] font-bold text-red-400 mb-1 text-center">Digite o valor do {{ ability.damage || ability.healing }}</div>
                                         <div class="flex gap-1">
                                           <input type="number" 
                                                  [ngModel]="manualDamageRollValue()" 
@@ -1442,18 +1442,6 @@ export class RightPanelComponent {
         });
       }
     });
-
-    effect(() => {
-      const isPlayMode = this.combat.isPlayMode();
-      const currentTab = this.combat.rightPanelTab();
-      const userRole = this.auth.currentUser()?.role;
-
-      if (isPlayMode && currentTab === 'actions' && userRole === 'GM') {
-        untracked(() => {
-          this.combat.rightPanelTab.set('sheet');
-        });
-      }
-    });
   }
 
   showDamageField = signal<boolean>(true);
@@ -1551,7 +1539,7 @@ export class RightPanelComponent {
 
     const formValue = this.abilityForm.getRawValue();
     const newAbility: Ability = {
-      ...(formValue as any),
+      ...(formValue as Omit<Ability, 'id'>),
       damage: this.showDamageField() ? formValue.damage : '',
       healing: this.showHealingField() ? formValue.healing : '',
       id: Math.random().toString(36).substring(2, 9),

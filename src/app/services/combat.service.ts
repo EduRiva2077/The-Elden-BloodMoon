@@ -367,7 +367,7 @@ export class CombatService {
     });
   }
 
-  revealFogAround(x: number, y: number, radius: number = 4) {
+  revealFogAround(x: number, y: number, radius = 4) {
     if (!this.isFogEnabled()) return;
     
     this.fogOfWar.update(fog => {
