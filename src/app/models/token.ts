@@ -28,6 +28,7 @@ export interface CharacterSheet {
   maxHp: number;
   spellUses?: number;
   maxSpellUses?: number;
+  spellcastingAbility?: 'int' | 'wis' | 'cha';
   
   cp?: number;
   sp?: number;

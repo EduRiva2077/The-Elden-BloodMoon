@@ -18,6 +18,7 @@ export interface Ability {
   attackBonus?: number; // e.g., +5 to hit
   
   category?: 'weapon' | 'spell' | 'feature' | 'item_effect';
+  properties?: string[]; // e.g., ['finesse', 'ranged', 'heavy']
   spellLevel?: number;
   uses?: number;
   maxUses?: number;

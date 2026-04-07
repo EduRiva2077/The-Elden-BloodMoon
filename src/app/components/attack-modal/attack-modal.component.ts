@@ -158,7 +158,7 @@ export class AttackModalComponent {
     };
     const weapon = {
       name: s.ability.name,
-      properties: s.ability.category === 'weapon' ? (s.ability.range > 1.5 ? ['ranged'] : []) : [], // Simplification
+      properties: s.ability.properties || [],
       attackBonus: s.ability.attackBonus
     };
     
@@ -178,7 +178,7 @@ export class AttackModalComponent {
     };
     const weapon = {
       name: s.ability.name,
-      properties: s.ability.category === 'weapon' ? (s.ability.range > 1.5 ? ['ranged'] : []) : [],
+      properties: s.ability.properties || [],
       attackBonus: s.ability.attackBonus
     };
     
@@ -223,7 +223,7 @@ export class AttackModalComponent {
     };
     const weapon = {
       name: s.ability.name,
-      properties: s.ability.category === 'weapon' ? (s.ability.range > 1.5 ? ['ranged'] : []) : [],
+      properties: s.ability.properties || [],
       attackBonus: s.ability.attackBonus
     };
 
