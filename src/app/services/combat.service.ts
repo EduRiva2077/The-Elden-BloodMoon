@@ -1,4 +1,4 @@
-import { Injectable, signal, inject, effect } from '@angular/core';
+import { Injectable, signal, inject, effect, untracked } from '@angular/core';
 import { Ability } from '../models/ability';
 import { Token, CharacterSheet } from '../models/token';
 import { DndCoreEngineService, ActionResult } from './dnd-core-engine.service';
@@ -68,6 +68,9 @@ const XP_TABLE: Record<number, { xp: number, pb: number }> = {
 export class CombatService {
   private engine = inject(DndCoreEngineService);
   private campaignService = inject(CampaignService);
+  
+  private currentCampaignId: string | null = null;
+
   // Estado de Combate / Preview
   previewAbility = signal<Ability | null>(null);
   previewOrigin = signal<{x: number, y: number} | null>(null);
@@ -151,7 +154,8 @@ export class CombatService {
   constructor() {
     effect(() => {
       const campaign = this.campaignService.activeCampaign();
-      if (campaign) {
+      if (campaign && campaign.id !== this.currentCampaignId) {
+        this.currentCampaignId = campaign.id;
         if (campaign.id === 'test-campaign') {
           // Load test tokens
           this.tokens.set([
@@ -189,21 +193,22 @@ export class CombatService {
         } else {
           this.mapBackgroundImage.set(null);
         }
+      } else if (!campaign) {
+        this.currentCampaignId = null;
       }
     });
 
-    // Save tokens and map to campaign when they change
-    effect(() => {
-      const currentTokens = this.tokens();
-      const currentMap = this.mapBackgroundImage();
-      const campaign = this.campaignService.activeCampaign();
-      if (campaign && campaign.id !== 'test-campaign') {
-        this.campaignService.updateActiveCampaign({ 
-          tokens: currentTokens,
-          mapBackgroundImage: currentMap
-        });
-      }
-    });
+    // Save tokens and map to campaign when they change is now handled explicitly
+  }
+
+  private saveToCampaign() {
+    const campaign = untracked(() => this.campaignService.activeCampaign());
+    if (campaign && campaign.id !== 'test-campaign') {
+      this.campaignService.updateActiveCampaign({ 
+        tokens: untracked(() => this.tokens()),
+        mapBackgroundImage: untracked(() => this.mapBackgroundImage())
+      });
+    }
   }
 
   updateToken(id: string, updates: Partial<Token>) {
@@ -248,6 +253,7 @@ export class CombatService {
     if (movedPlayerX !== null && movedPlayerY !== null) {
       this.revealFogAround(movedPlayerX, movedPlayerY);
     }
+    this.saveToCampaign();
   }
 
   private distributeXP(amount: number, sourceName: string) {
@@ -282,6 +288,7 @@ export class CombatService {
       }
       return t;
     }));
+    this.saveToCampaign();
   }
 
   private checkLevelUp(sheet: CharacterSheet, charName: string): { sheet: CharacterSheet, leveledUp: boolean } {
@@ -335,10 +342,12 @@ export class CombatService {
     if (token.type === 'player') {
       this.revealFogAround(token.x, token.y);
     }
+    this.saveToCampaign();
   }
 
   deleteToken(id: string) {
     this.tokens.update(ts => ts.filter(t => t.id !== id));
+    this.saveToCampaign();
   }
   
   startPreview(ability: Ability, originToken: Token) {
@@ -364,6 +373,7 @@ export class CombatService {
 
   setMapBackground(url: string) {
     this.mapBackgroundImage.set(url);
+    this.saveToCampaign();
   }
 
   addStorySlide(slide: {url: string, title: string, description: string}) {
