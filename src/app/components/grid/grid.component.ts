@@ -134,9 +134,9 @@ import { Ability } from '../../models/ability';
                      [class.shadow-[0_0_15px_rgba(255,255,255,0.8)]]="selectedTokenId() === token.id && !isAffected(token)"
                      [class.shadow-[0_0_15px_rgba(239,68,68,0.8)]]="isAffected(token)"
                      [style.backgroundColor]="token.color"
-                     [style.width.px]="gridSize"
-                     [style.height.px]="gridSize"
-                     [cdkDragFreeDragPosition]="{x: token.x * gridSize, y: token.y * gridSize}"
+                     [style.width.px]="getTokenSize(token)"
+                     [style.height.px]="getTokenSize(token)"
+                     [cdkDragFreeDragPosition]="{x: token.x * gridSize + (gridSize - getTokenSize(token)) / 2, y: token.y * gridSize + (gridSize - getTokenSize(token)) / 2}"
                      cdkDrag
                      [cdkDragScale]="combat.zoom()"
                      [cdkDragDisabled]="!canMove(token)"
@@ -277,6 +277,12 @@ export class GridComponent {
   isPanning = false;
   private hasPanned = false;
   private lastPanPos = { x: 0, y: 0 };
+
+  getTokenSize(token: Token): number {
+    if (token.type === 'item') return this.gridSize * 0.6;
+    if (token.type === 'boss') return this.gridSize * 1.5;
+    return this.gridSize;
+  }
 
   onHorizontalScroll(value: number) {
     this.combat.pan.update(p => ({ x: -value, y: p.y }));
@@ -717,9 +723,10 @@ export class GridComponent {
     }
 
     const position = event.source.getFreeDragPosition();
+    const sizeOffset = (this.gridSize - this.getTokenSize(token)) / 2;
     
-    let newGridX = Math.round(position.x / this.gridSize);
-    let newGridY = Math.round(position.y / this.gridSize);
+    let newGridX = Math.round((position.x - sizeOffset) / this.gridSize);
+    let newGridY = Math.round((position.y - sizeOffset) / this.gridSize);
     
     if (this.boundary) {
       const maxGridX = Math.max(0, Math.floor(this.mapWidth() / this.gridSize) - 1);
@@ -737,7 +744,10 @@ export class GridComponent {
     this.combat.updateToken(token.id, { x: newGridX, y: newGridY });
     
     // Explicitly set the free drag position to ensure it snaps even if the grid coordinates didn't change
-    event.source.setFreeDragPosition({x: newGridX * this.gridSize, y: newGridY * this.gridSize});
+    event.source.setFreeDragPosition({
+      x: newGridX * this.gridSize + sizeOffset, 
+      y: newGridY * this.gridSize + sizeOffset
+    });
     
     this.syncToFirestore(token.id, newGridX, newGridY);
   }

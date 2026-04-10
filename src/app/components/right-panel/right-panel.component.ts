@@ -68,6 +68,13 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
             </div>
           } @else {
             @if (selectedToken()?.type === 'item') {
+              <!-- Item Image -->
+              @if (selectedToken()?.imageUrl) {
+                <div class="flex justify-center mb-4">
+                  <img [src]="selectedToken()?.imageUrl" class="w-32 h-32 object-contain rounded-md border border-stone-700 shadow-lg bg-stone-800/50" alt="Item Image" referrerpolicy="no-referrer" />
+                </div>
+              }
+
               <!-- Item Details -->
               <div class="bg-stone-800 rounded border border-stone-700 p-3 shadow-md mb-4">
                 <div class="flex justify-between items-center mb-2">
@@ -895,6 +902,13 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
               Selecione um token no mapa para ver sua ficha de personagem.
             </div>
           } @else {
+            <!-- Token Image -->
+            @if (selectedToken()?.imageUrl) {
+              <div class="flex justify-center mb-4">
+                <img [src]="selectedToken()?.imageUrl" class="w-32 h-32 object-cover rounded-full border-2 border-stone-700 shadow-lg bg-stone-800/50" alt="Token Image" referrerpolicy="no-referrer" />
+              </div>
+            }
+
             @if (isEditingSheet()) {
               <div class="bg-stone-800 rounded border border-stone-700 p-3 space-y-4 shadow-md text-xs">
                 <div class="flex justify-between items-center border-b border-stone-700 pb-2">
