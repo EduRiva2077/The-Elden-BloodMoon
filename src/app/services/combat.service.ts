@@ -5,6 +5,7 @@ import { DndCoreEngineService, ActionResult } from './dnd-core-engine.service';
 import { ItemToken } from '../models/item-token';
 import { TokenCondition } from '../models/token';
 import { CampaignService } from './campaign.service';
+import { Scene } from '../models/campaign';
 
 export const AVAILABLE_CONDITIONS: TokenCondition[] = [
   { id: 'fire', name: 'Fogo', icon: 'local_fire_department', color: '#ef4444' },
@@ -128,6 +129,11 @@ export class CombatService {
   
   // Story Slides State
   showStorySlides = signal<boolean>(false);
+  
+  // Scenes State
+  scenes = signal<Scene[]>([]);
+  activeSceneId = signal<string | null>(null);
+
   storySlides = signal<{url: string, title: string, description: string}[]>([
     {
       url: 'https://picsum.photos/seed/dnd1/1920/1080',
@@ -193,6 +199,12 @@ export class CombatService {
         } else {
           this.mapBackgroundImage.set(null);
         }
+        
+        if (campaign.fogOfWar) this.fogOfWar.set(campaign.fogOfWar);
+        if (campaign.isFogEnabled !== undefined) this.isFogEnabled.set(campaign.isFogEnabled);
+        if (campaign.scenes) this.scenes.set(campaign.scenes);
+        if (campaign.activeSceneId !== undefined) this.activeSceneId.set(campaign.activeSceneId);
+        
       } else if (!campaign) {
         this.currentCampaignId = null;
       }
@@ -201,13 +213,43 @@ export class CombatService {
     // Save tokens and map to campaign when they change is now handled explicitly
   }
 
-  private saveToCampaign() {
+  saveToCampaign() {
     const campaign = untracked(() => this.campaignService.activeCampaign());
     if (campaign && campaign.id !== 'test-campaign') {
+      
+      // Sync active scene before saving
+      let currentScenes = untracked(() => this.scenes());
+      const activeId = untracked(() => this.activeSceneId());
+      if (activeId) {
+        currentScenes = currentScenes.map(s => {
+          if (s.id === activeId) {
+            return {
+              ...s,
+              mapBackgroundImage: untracked(() => this.mapBackgroundImage()),
+              tokens: JSON.parse(JSON.stringify(untracked(() => this.tokens()))),
+              fogOfWar: JSON.parse(JSON.stringify(untracked(() => this.fogOfWar()))),
+              isFogEnabled: untracked(() => this.isFogEnabled())
+            };
+          }
+          return s;
+        });
+        // Update scenes signal silently if we want, but we'll just save it to campaign
+        // To avoid infinite loops, we just pass it to updateActiveCampaign
+      }
+
       this.campaignService.updateActiveCampaign({ 
         tokens: untracked(() => this.tokens()),
-        mapBackgroundImage: untracked(() => this.mapBackgroundImage())
+        mapBackgroundImage: untracked(() => this.mapBackgroundImage()),
+        fogOfWar: untracked(() => this.fogOfWar()),
+        isFogEnabled: untracked(() => this.isFogEnabled()),
+        scenes: currentScenes,
+        activeSceneId: activeId
       });
+      
+      // Update signal if changed
+      if (activeId && currentScenes !== untracked(() => this.scenes())) {
+        this.scenes.set(currentScenes);
+      }
     }
   }
 
@@ -374,6 +416,61 @@ export class CombatService {
   setMapBackground(url: string) {
     this.mapBackgroundImage.set(url);
     this.saveToCampaign();
+  }
+
+  // Scene Management
+  createScene(name: string) {
+    const newScene: Scene = {
+      id: Math.random().toString(36).substr(2, 9),
+      name,
+      mapBackgroundImage: this.mapBackgroundImage(),
+      tokens: JSON.parse(JSON.stringify(this.tokens())),
+      fogOfWar: JSON.parse(JSON.stringify(this.fogOfWar())),
+      isFogEnabled: this.isFogEnabled()
+    };
+    this.scenes.update(s => [...s, newScene]);
+    this.activeSceneId.set(newScene.id);
+    this.saveToCampaign();
+  }
+
+  loadScene(id: string) {
+    const scene = this.scenes().find(s => s.id === id);
+    if (scene) {
+      this.mapBackgroundImage.set(scene.mapBackgroundImage);
+      this.tokens.set(JSON.parse(JSON.stringify(scene.tokens)));
+      this.fogOfWar.set(JSON.parse(JSON.stringify(scene.fogOfWar)));
+      this.isFogEnabled.set(scene.isFogEnabled);
+      this.activeSceneId.set(id);
+      this.saveToCampaign();
+    }
+  }
+
+  deleteScene(id: string) {
+    this.scenes.update(s => s.filter(scene => scene.id !== id));
+    if (this.activeSceneId() === id) {
+      this.activeSceneId.set(null);
+    }
+    this.saveToCampaign();
+  }
+
+  nextScene() {
+    const scenes = this.scenes();
+    if (scenes.length === 0) return;
+    const activeId = this.activeSceneId();
+    const currentIndex = scenes.findIndex(s => s.id === activeId);
+    if (currentIndex < scenes.length - 1) {
+      this.loadScene(scenes[currentIndex + 1].id);
+    }
+  }
+
+  previousScene() {
+    const scenes = this.scenes();
+    if (scenes.length === 0) return;
+    const activeId = this.activeSceneId();
+    const currentIndex = scenes.findIndex(s => s.id === activeId);
+    if (currentIndex > 0) {
+      this.loadScene(scenes[currentIndex - 1].id);
+    }
   }
 
   addStorySlide(slide: {url: string, title: string, description: string}) {
