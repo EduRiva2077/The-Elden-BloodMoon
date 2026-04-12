@@ -433,6 +433,19 @@ export class CombatService {
     this.saveToCampaign();
   }
 
+  createBlankScene(name: string) {
+    const newScene: Scene = {
+      id: Math.random().toString(36).substr(2, 9),
+      name,
+      mapBackgroundImage: null,
+      tokens: [],
+      fogOfWar: [],
+      isFogEnabled: true
+    };
+    this.scenes.update(s => [...s, newScene]);
+    this.loadScene(newScene.id);
+  }
+
   loadScene(id: string) {
     const scene = this.scenes().find(s => s.id === id);
     if (scene) {

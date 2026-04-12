@@ -15,7 +15,6 @@ import { MatIconModule } from '@angular/material/icon';
       <div class="flex border-b border-stone-800 text-xs font-mono">
         <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="activeTab() === 'map'" [class.border-b-2]="activeTab() === 'map'" [class.border-amber-500]="activeTab() === 'map'" [class.bg-stone-800]="activeTab() === 'map'" (click)="activeTab.set('map')">Mapa</button>
         <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="activeTab() === 'tokens'" [class.border-b-2]="activeTab() === 'tokens'" [class.border-amber-500]="activeTab() === 'tokens'" [class.bg-stone-800]="activeTab() === 'tokens'" (click)="activeTab.set('tokens')">Tokens</button>
-        <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="activeTab() === 'scenes'" [class.border-b-2]="activeTab() === 'scenes'" [class.border-amber-500]="activeTab() === 'scenes'" [class.bg-stone-800]="activeTab() === 'scenes'" (click)="activeTab.set('scenes')">Cenas</button>
       </div>
       
       <!-- Content Area -->
@@ -233,58 +232,13 @@ import { MatIconModule } from '@angular/material/icon';
           </div>
         }
 
-        @if (activeTab() === 'scenes') {
-          <div class="p-4 space-y-6">
-            <div class="space-y-4">
-              <div class="flex justify-between items-center border-b border-stone-700 pb-2">
-                <h3 class="font-bold text-amber-500">Cenas do Mapa</h3>
-                <button (click)="createScene()" class="bg-amber-600 hover:bg-amber-500 text-stone-900 px-2 py-1 rounded text-xs font-bold flex items-center gap-1 transition-colors">
-                  <mat-icon style="font-size: 14px; width: 14px; height: 14px;">add</mat-icon> Nova
-                </button>
-              </div>
-
-              @if (combat.scenes().length === 0) {
-                <div class="text-sm text-stone-500 italic p-4 text-center border border-dashed border-stone-700 rounded">
-                  Nenhuma cena salva. Salve o estado atual do mapa como uma cena para alternar rapidamente depois.
-                </div>
-              } @else {
-                <div class="flex gap-2 mb-4">
-                  <button (click)="combat.previousScene()" [disabled]="!canGoPreviousScene()" class="flex-1 py-1.5 bg-stone-800 hover:bg-stone-700 disabled:opacity-50 disabled:hover:bg-stone-800 text-stone-300 rounded border border-stone-700 transition-colors flex items-center justify-center">
-                    <mat-icon style="font-size: 16px; width: 16px; height: 16px;">arrow_back</mat-icon>
-                  </button>
-                  <button (click)="combat.nextScene()" [disabled]="!canGoNextScene()" class="flex-1 py-1.5 bg-stone-800 hover:bg-stone-700 disabled:opacity-50 disabled:hover:bg-stone-800 text-stone-300 rounded border border-stone-700 transition-colors flex items-center justify-center">
-                    <mat-icon style="font-size: 16px; width: 16px; height: 16px;">arrow_forward</mat-icon>
-                  </button>
-                </div>
-
-                <div class="space-y-2">
-                  @for (scene of combat.scenes(); track scene.id) {
-                    <div class="flex items-center justify-between p-2 rounded border transition-colors"
-                         [class.bg-amber-900]="combat.activeSceneId() === scene.id"
-                         [class.border-amber-500]="combat.activeSceneId() === scene.id"
-                         [class.bg-stone-800]="combat.activeSceneId() !== scene.id"
-                         [class.border-stone-700]="combat.activeSceneId() !== scene.id">
-                      <div class="flex-1 cursor-pointer truncate" (click)="combat.loadScene(scene.id)">
-                        <span class="text-sm font-bold" [class.text-amber-100]="combat.activeSceneId() === scene.id" [class.text-stone-300]="combat.activeSceneId() !== scene.id">{{ scene.name }}</span>
-                      </div>
-                      <button (click)="combat.deleteScene(scene.id)" class="text-stone-500 hover:text-red-400 p-1 rounded hover:bg-stone-700 transition-colors" title="Excluir Cena">
-                        <mat-icon style="font-size: 16px; width: 16px; height: 16px;">delete</mat-icon>
-                      </button>
-                    </div>
-                  }
-                </div>
-              }
-            </div>
-          </div>
-        }
-
       </div>
     </div>
   `
 })
 export class GmPanelComponent {
   combat = inject(CombatService);
-  activeTab = signal<'map' | 'tokens' | 'scenes'>('map');
+  activeTab = signal<'map' | 'tokens'>('map');
   tokenToDelete = signal<string | null>(null);
 
   conditionCategories = [
@@ -447,21 +401,5 @@ export class GmPanelComponent {
       this.combat.clearFog();
       this.combat.saveToCampaign(); // Trigger save
     }
-  }
-
-  canGoPreviousScene(): boolean {
-    const scenes = this.combat.scenes();
-    if (scenes.length === 0) return false;
-    const activeId = this.combat.activeSceneId();
-    const currentIndex = scenes.findIndex(s => s.id === activeId);
-    return currentIndex > 0;
-  }
-
-  canGoNextScene(): boolean {
-    const scenes = this.combat.scenes();
-    if (scenes.length === 0) return false;
-    const activeId = this.combat.activeSceneId();
-    const currentIndex = scenes.findIndex(s => s.id === activeId);
-    return currentIndex !== -1 && currentIndex < scenes.length - 1;
   }
 }

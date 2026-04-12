@@ -4,6 +4,7 @@ import { GmPanelComponent } from '../gm-panel/gm-panel.component';
 import { RightPanelComponent } from '../right-panel/right-panel.component';
 import { BottomBarComponent } from '../bottom-bar/bottom-bar.component';
 import { StorySlidesComponent } from '../story-slides/story-slides.component';
+import { SceneFilmstripComponent } from '../scene-filmstrip/scene-filmstrip.component';
 import { AuthService } from '../../services/auth.service';
 import { CombatService } from '../../services/combat.service';
 import { MatIconModule } from '@angular/material/icon';
@@ -15,7 +16,7 @@ import { AttackModalComponent } from '../attack-modal/attack-modal.component';
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [GridComponent, GmPanelComponent, RightPanelComponent, BottomBarComponent, StorySlidesComponent, MatIconModule, CommonModule, ItemInteractionModalComponent, AttackModalComponent],
+  imports: [GridComponent, GmPanelComponent, RightPanelComponent, BottomBarComponent, StorySlidesComponent, SceneFilmstripComponent, MatIconModule, CommonModule, ItemInteractionModalComponent, AttackModalComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-col h-screen w-screen overflow-hidden bg-black text-stone-200 font-sans">
@@ -29,12 +30,18 @@ import { AttackModalComponent } from '../attack-modal/attack-modal.component';
         }
 
         <!-- Center Map or Slides -->
-        <div class="flex-1 relative z-10">
-          @if (combat.showStorySlides()) {
-            <app-story-slides [slides]="combat.storySlides()"></app-story-slides>
-          } @else {
-            <app-grid></app-grid>
+        <div class="flex-1 relative z-10 flex flex-col">
+          @if (!combat.showStorySlides()) {
+            <app-scene-filmstrip></app-scene-filmstrip>
           }
+          
+          <div class="flex-1 relative">
+            @if (combat.showStorySlides()) {
+              <app-story-slides [slides]="combat.storySlides()"></app-story-slides>
+            } @else {
+              <app-grid></app-grid>
+            }
+          </div>
         </div>
 
         <!-- Right Panel (Chat/Abilities) -->
