@@ -38,7 +38,7 @@ export const AVAILABLE_CONDITIONS: TokenCondition[] = [
 export interface CombatNotification {
   id: string;
   message: string;
-  type: 'xp' | 'level-up' | 'info';
+  type: 'xp' | 'level-up' | 'info' | 'error';
   timestamp: number;
 }
 
@@ -365,7 +365,7 @@ export class CombatService {
     return { sheet, leveledUp };
   }
 
-  private addNotification(message: string, type: 'xp' | 'level-up' | 'info') {
+  addNotification(message: string, type: 'xp' | 'level-up' | 'info' | 'error') {
     const id = Math.random().toString(36).substr(2, 9);
     this.notifications.update(n => [...n, { id, message, type, timestamp: Date.now() }]);
     
@@ -663,6 +663,33 @@ export class CombatService {
       hit: isHit && !attackRoll.isCriticalFail,
       log
     };
+  }
+
+  resolveAoEDamage(origin: {x: number, y: number}, targets: Token[], ability: Ability) {
+    if (!ability.damage) return;
+    
+    // Sort targets by distance to origin
+    const sortedTargets = targets.map(t => {
+      const dist = Math.sqrt(Math.pow(t.x - origin.x, 2) + Math.pow(t.y - origin.y, 2));
+      return { token: t, dist };
+    }).sort((a, b) => a.dist - b.dist);
+
+    // Roll damage once
+    const damageRoll = this.engine.calculateDamage(ability.damage, 0, 0);
+    
+    sortedTargets.forEach((item, index) => {
+      // Front token takes full damage, others take half
+      let dmg = damageRoll.total;
+      if (index > 0) {
+        dmg = Math.floor(dmg / 2);
+      }
+      
+      const newHp = Math.max(0, item.token.hp - dmg);
+      this.updateToken(item.token.id, { hp: newHp });
+      
+      const log = `${item.token.name} sofreu ${dmg} de dano em área (${index === 0 ? 'Dano Total' : 'Dano Reduzido'}).`;
+      this.addNotification(log, 'info');
+    });
   }
 
   /**

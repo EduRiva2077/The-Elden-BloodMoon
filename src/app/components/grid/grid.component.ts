@@ -625,26 +625,26 @@ export class GridComponent {
       const originToken = this.tokens().find(t => t.x === originPos.x && t.y === originPos.y);
       
       // Spell uses check
-      if (originToken && ability.category === 'spell' && originToken.spellUses && originToken.spellUses <= 0) {
-        console.warn('Usos de magia insuficientes para usar esta habilidade!');
+      if (originToken && ability.category === 'spell' && originToken.spellUses !== undefined && originToken.spellUses <= 0) {
+        this.combat.addNotification(`${originToken.name} não possui mais usos de magia para usar ${ability.name}!`, 'error');
         this.combat.cancelPreview();
         return;
       }
 
       // Ability specific uses check
-      if (originToken && ability.maxUses && (!ability.uses || ability.uses <= 0)) {
-        console.warn('Usos insuficientes para usar esta habilidade!');
+      if (originToken && ability.maxUses && (ability.uses === undefined || ability.uses <= 0)) {
+        this.combat.addNotification(`${originToken.name} não possui mais usos de ${ability.name}!`, 'error');
         this.combat.cancelPreview();
         return;
       }
 
       // Deduct spell use
-      if (originToken && ability.category === 'spell' && originToken.spellUses) {
+      if (originToken && ability.category === 'spell' && originToken.spellUses !== undefined && originToken.spellUses > 0) {
         this.combat.updateToken(originToken.id, { spellUses: originToken.spellUses - 1 });
       }
 
       // Deduct ability specific uses
-      if (originToken && ability.maxUses && ability.uses && ability.uses > 0) {
+      if (originToken && ability.maxUses && ability.uses !== undefined && ability.uses > 0) {
         const updatedAbilities = originToken.abilities?.map(a => 
           a.id === ability.id ? { ...a, uses: a.uses! - 1 } : a
         );
@@ -659,21 +659,35 @@ export class GridComponent {
       console.log(`Confirmed ability: ${ability.name}`);
       console.log(`Affected tokens:`, affected.map(t => t.name));
       
-      affected.forEach(t => {
-        // Se a habilidade tem cura, aplica cura
-        if (ability.healing) {
-          const result = this.combat.resolveHealing(t, ability);
-          console.log(result.log);
+      if (ability.areaShape && ability.areaShape !== 'none') {
+        // AoE Attack
+        if (ability.damage && affected.length > 0) {
+          this.combat.resolveAoEDamage(originPos, affected, ability);
         }
-        
-        // Se a habilidade tem dano, aplica dano
-        if (ability.damage) {
-          // Em vez de resolver direto, abre o modal de ataque
-          if (originToken) {
-            this.combat.openAttackModal(originToken, t, ability);
+        if (ability.healing && affected.length > 0) {
+          affected.forEach(t => {
+            const result = this.combat.resolveHealing(t, ability);
+            this.combat.addNotification(result.log, 'info');
+          });
+        }
+      } else {
+        // Single target
+        affected.forEach(t => {
+          // Se a habilidade tem cura, aplica cura
+          if (ability.healing) {
+            const result = this.combat.resolveHealing(t, ability);
+            this.combat.addNotification(result.log, 'info');
           }
-        }
-      });
+          
+          // Se a habilidade tem dano, aplica dano
+          if (ability.damage) {
+            // Em vez de resolver direto, abre o modal de ataque
+            if (originToken) {
+              this.combat.openAttackModal(originToken, t, ability);
+            }
+          }
+        });
+      }
       
       this.combat.cancelPreview();
     } else {

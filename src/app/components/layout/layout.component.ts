@@ -59,8 +59,12 @@ import { AttackModalComponent } from '../attack-modal/attack-modal.component';
         @for (notif of combat.notifications(); track notif.id) {
           <div class="bg-stone-900/90 border border-stone-700 rounded p-3 shadow-lg flex items-start gap-2 animate-in slide-in-from-right pointer-events-auto backdrop-blur-sm">
             <div class="flex-1">
-              <p class="text-xs font-bold" [class.text-amber-500]="notif.type === 'xp'" [class.text-green-500]="notif.type === 'level-up'" [class.text-blue-400]="notif.type === 'info'">
-                {{ notif.type === 'xp' ? 'XP Recebido' : notif.type === 'level-up' ? 'Subiu de Nível!' : 'Informação' }}
+              <p class="text-xs font-bold" 
+                 [class.text-amber-500]="notif.type === 'xp'" 
+                 [class.text-green-500]="notif.type === 'level-up'" 
+                 [class.text-blue-400]="notif.type === 'info'"
+                 [class.text-red-500]="notif.type === 'error'">
+                {{ notif.type === 'xp' ? 'XP Recebido' : notif.type === 'level-up' ? 'Subiu de Nível!' : notif.type === 'error' ? 'Ação Inválida' : 'Informação' }}
               </p>
               <p class="text-[10px] text-stone-300">{{ notif.message }}</p>
             </div>
