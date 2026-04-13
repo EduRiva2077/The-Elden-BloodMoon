@@ -189,40 +189,35 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
               </div>
             }
 
-            <!-- GM: Add Ability Form -->
-            @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
-              <div class="bg-stone-800 rounded border border-stone-700 p-3 mb-4 space-y-3 shadow-md mt-4">
-                <h4 class="text-xs font-bold text-amber-500 uppercase">
-                  @if (selectedToken()?.type === 'item') {
-                    Adicionar Funcionalidade do Item
-                  } @else {
-                    Adicionar Arma, Magia ou Habilidade
-                  }
-                </h4>
+            <!-- Add Ability Form Template -->
+            <ng-template #abilityFormTemplate let-category="category">
+              <div class="bg-stone-800 rounded border border-stone-700 p-3 mb-4 space-y-3 shadow-md mt-2">
+                <div class="flex justify-between items-center">
+                  <h4 class="text-xs font-bold text-amber-500 uppercase">
+                    Adicionar {{ category === 'weapon' ? 'Arma' : category === 'spell' ? 'Magia' : category === 'feature' ? 'Habilidade' : 'Efeito' }}
+                  </h4>
+                  <button (click)="showAddAbilityForm.set(false)" class="text-stone-500 hover:text-stone-300 transition-colors">
+                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">close</mat-icon>
+                  </button>
+                </div>
                 <form [formGroup]="abilityForm" (ngSubmit)="addAbility()" class="space-y-2">
                   <div class="grid grid-cols-2 gap-2">
                     <input formControlName="name" placeholder="Nome" class="w-full bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
-                    <select formControlName="category" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
-                      @if (selectedToken()?.type === 'item') {
-                        <option value="item_effect">Efeito do Item</option>
-                        <option value="weapon">Ataque</option>
-                        <option value="spell">Magia</option>
-                        <option value="feature">Habilidade</option>
-                      } @else {
-                        <option value="weapon">Arma</option>
-                        <option value="spell">Magia</option>
-                        <option value="feature">Habilidade</option>
-                      }
+                    <select formControlName="category" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500 hidden">
+                      <option value="item_effect">Efeito do Item</option>
+                      <option value="weapon">Arma</option>
+                      <option value="spell">Magia</option>
+                      <option value="feature">Habilidade</option>
                     </select>
-                  </div>
-                  
-                  <div class="grid grid-cols-2 gap-2">
                     <select formControlName="type" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
                       <option value="action">Ação</option>
                       <option value="bonus_action">Ação Bônus</option>
                       <option value="reaction">Reação</option>
                       <option value="passive">Passiva</option>
                     </select>
+                  </div>
+                  
+                  <div class="grid grid-cols-2 gap-2">
                     <select formControlName="areaShape" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
                       <option value="none">Sem Área</option>
                       <option value="circle">Círculo</option>
@@ -230,17 +225,16 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                       <option value="line">Linha</option>
                       <option value="rectangle">Retângulo</option>
                     </select>
-                  </div>
-
-                  <div class="flex items-center gap-4 mb-2 px-1">
-                    <label class="flex items-center gap-1 text-[10px] text-stone-400 cursor-pointer">
-                      <input type="checkbox" [checked]="showDamageField()" (change)="showDamageField.set(!showDamageField())" class="accent-amber-500">
-                      Dano
-                    </label>
-                    <label class="flex items-center gap-1 text-[10px] text-stone-400 cursor-pointer">
-                      <input type="checkbox" [checked]="showHealingField()" (change)="showHealingField.set(!showHealingField())" class="accent-green-500">
-                      Cura
-                    </label>
+                    <div class="flex items-center gap-4 px-1">
+                      <label class="flex items-center gap-1 text-[10px] text-stone-400 cursor-pointer">
+                        <input type="checkbox" [checked]="showDamageField()" (change)="showDamageField.set(!showDamageField())" class="accent-amber-500">
+                        Dano
+                      </label>
+                      <label class="flex items-center gap-1 text-[10px] text-stone-400 cursor-pointer">
+                        <input type="checkbox" [checked]="showHealingField()" (change)="showHealingField.set(!showHealingField())" class="accent-green-500">
+                        Cura
+                      </label>
+                    </div>
                   </div>
 
                   <div class="grid grid-cols-2 gap-2">
@@ -297,7 +291,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                   </button>
                 </form>
               </div>
-            }
+            </ng-template>
 
             <!-- Abilities Section with Sub-tabs -->
             <div class="mt-6 border border-stone-700 rounded overflow-hidden bg-stone-900/30">
@@ -338,6 +332,17 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
               <div class="p-3 space-y-4">
                 <!-- Weapons List -->
                 @if (inventorySubTab() === 'weapons') {
+                  <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xs font-bold text-stone-400 uppercase">Armas</h3>
+                    @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                      <button (click)="openAddAbilityForm('weapon')" class="text-[10px] bg-stone-800 hover:bg-stone-700 text-amber-500 px-2 py-1 rounded border border-stone-700 transition-colors flex items-center gap-1">
+                        <mat-icon style="font-size: 12px; width: 12px; height: 12px;">add</mat-icon> Adicionar Arma
+                      </button>
+                    }
+                  </div>
+                  @if (showAddAbilityForm() && abilityForm.get('category')?.value === 'weapon') {
+                    <ng-container *ngTemplateOutlet="abilityFormTemplate; context: { category: 'weapon' }"></ng-container>
+                  }
                   @if (weapons().length > 0) {
                     <div class="space-y-3">
                       @for (ability of weapons(); track ability.id) {
@@ -474,6 +479,17 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
 
                 <!-- Spells List -->
                 @if (inventorySubTab() === 'spells') {
+                  <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xs font-bold text-stone-400 uppercase">Magias</h3>
+                    @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                      <button (click)="openAddAbilityForm('spell')" class="text-[10px] bg-stone-800 hover:bg-stone-700 text-amber-500 px-2 py-1 rounded border border-stone-700 transition-colors flex items-center gap-1">
+                        <mat-icon style="font-size: 12px; width: 12px; height: 12px;">add</mat-icon> Adicionar Magia
+                      </button>
+                    }
+                  </div>
+                  @if (showAddAbilityForm() && abilityForm.get('category')?.value === 'spell') {
+                    <ng-container *ngTemplateOutlet="abilityFormTemplate; context: { category: 'spell' }"></ng-container>
+                  }
                   @if (spells().length > 0) {
                     <div class="space-y-3">
                       @for (ability of spells(); track ability.id) {
@@ -622,6 +638,17 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
 
                 <!-- Item Effects List -->
                 @if (inventorySubTab() === 'features' && selectedToken()?.type === 'item') {
+                  <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xs font-bold text-stone-400 uppercase">Efeitos do Item</h3>
+                    @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                      <button (click)="openAddAbilityForm('item_effect')" class="text-[10px] bg-stone-800 hover:bg-stone-700 text-amber-500 px-2 py-1 rounded border border-stone-700 transition-colors flex items-center gap-1">
+                        <mat-icon style="font-size: 12px; width: 12px; height: 12px;">add</mat-icon> Adicionar Efeito
+                      </button>
+                    }
+                  </div>
+                  @if (showAddAbilityForm() && abilityForm.get('category')?.value === 'item_effect') {
+                    <ng-container *ngTemplateOutlet="abilityFormTemplate; context: { category: 'item_effect' }"></ng-container>
+                  }
                   @if (itemEffects().length > 0) {
                     <div class="space-y-3">
                       @for (ability of itemEffects(); track ability.id) {
@@ -757,6 +784,17 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
 
                 <!-- Features List -->
                 @if (inventorySubTab() === 'features' && selectedToken()?.type !== 'item') {
+                  <div class="flex justify-between items-center mb-2">
+                    <h3 class="text-xs font-bold text-stone-400 uppercase">Habilidades</h3>
+                    @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                      <button (click)="openAddAbilityForm('feature')" class="text-[10px] bg-stone-800 hover:bg-stone-700 text-amber-500 px-2 py-1 rounded border border-stone-700 transition-colors flex items-center gap-1">
+                        <mat-icon style="font-size: 12px; width: 12px; height: 12px;">add</mat-icon> Adicionar Habilidade
+                      </button>
+                    }
+                  </div>
+                  @if (showAddAbilityForm() && abilityForm.get('category')?.value === 'feature') {
+                    <ng-container *ngTemplateOutlet="abilityFormTemplate; context: { category: 'feature' }"></ng-container>
+                  }
                   @if (features().length > 0) {
                     <div class="space-y-3">
                       @for (ability of features(); track ability.id) {
@@ -1481,6 +1519,12 @@ export class RightPanelComponent {
 
   showDamageField = signal<boolean>(true);
   showHealingField = signal<boolean>(false);
+  showAddAbilityForm = signal<boolean>(false);
+
+  openAddAbilityForm(category: 'weapon' | 'spell' | 'feature' | 'item_effect') {
+    this.abilityForm.patchValue({ category });
+    this.showAddAbilityForm.set(true);
+  }
 
   sheetForm = new FormGroup({
     class: new FormControl('', { nonNullable: true }),
@@ -1601,6 +1645,8 @@ export class RightPanelComponent {
       uses: 0,
       maxUses: 0
     });
+    
+    this.showAddAbilityForm.set(false);
   }
 
   removeAbility(id: string) {
