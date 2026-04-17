@@ -756,13 +756,16 @@ export class GridComponent {
   onDragEnded(event: CdkDragEnd, token: Token) {
     this.combat.draggedTokenPos.set(null);
     
+    const size = this.getTokenSize(token);
+    
     if (!this.canMove(token)) {
-      event.source._dragRef.reset();
+      const snappedX = token.x * this.gridSize + (this.gridSize - size) / 2;
+      const snappedY = token.y * this.gridSize + (this.gridSize - size) / 2;
+      event.source.setFreeDragPosition({ x: snappedX, y: snappedY });
       return;
     }
 
     const position = event.source.getFreeDragPosition();
-    const size = this.getTokenSize(token);
     
     // Calculate the center of the token, then find which grid cell that center belongs to
     const centerX = position.x + size / 2;
@@ -784,11 +787,10 @@ export class GridComponent {
     
     this.combat.updateToken(token.id, { x: newGridX, y: newGridY });
     
-    // Reset the drag transform so the [cdkDragFreeDragPosition] binding takes over
-    // This ensures the token snaps perfectly to the grid center
-    setTimeout(() => {
-      event.source._dragRef.reset();
-    });
+    // Snap visually to exactly where it should be on the grid
+    const targetPx = newGridX * this.gridSize + (this.gridSize - size) / 2;
+    const targetPy = newGridY * this.gridSize + (this.gridSize - size) / 2;
+    event.source.setFreeDragPosition({ x: targetPx, y: targetPy });
     
     this.syncToFirestore(token.id, newGridX, newGridY);
   }
