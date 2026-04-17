@@ -83,6 +83,17 @@ import { Ability } from '../../models/ability';
             <!-- Area Preview SVG -->
             @if (previewAbility()) {
               <svg class="absolute inset-0 w-full h-full pointer-events-none z-5" [attr.viewBox]="'0 0 ' + mapWidth() + ' ' + mapHeight()">
+                <!-- Max Range Circle Visual -->
+                @if (previewAbility()?.range; as range) {
+                  <circle 
+                    [attr.cx]="(combat.previewOrigin()?.x || 0) * gridSize + gridSize / 2" 
+                    [attr.cy]="(combat.previewOrigin()?.y || 0) * gridSize + gridSize / 2" 
+                    [attr.r]="range * (gridSize / 1.5)" 
+                    fill="rgba(245, 158, 11, 0.03)" 
+                    stroke="rgba(245, 158, 11, 0.3)" 
+                    stroke-width="1" 
+                    stroke-dasharray="10,5" />
+                }
                 <path [attr.d]="areaPath()" fill="rgba(245, 158, 11, 0.4)" stroke="#f59e0b" stroke-width="2" />
               </svg>
             }

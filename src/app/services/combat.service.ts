@@ -426,12 +426,45 @@ export class CombatService {
   }
 
   updateTarget(x: number, y: number) {
-    // Para alinhamento perfeito do cone/raio e evitar o aspecto "quebrado" nas linhas da grade, 
-    // os coordenados do target agora sofrem Snap pro centro da célula focada.
-    const gridSize = 64; // Mesma referência do GridComponent
-    const snappedX = Math.floor(x / gridSize) * gridSize + (gridSize / 2);
-    const snappedY = Math.floor(y / gridSize) * gridSize + (gridSize / 2);
-    this.previewTarget.set({ x: snappedX, y: snappedY });
+    const ability = this.previewAbility();
+    const origin = this.previewOrigin();
+    if (!ability || !origin) return;
+
+    const gridSize = 64;
+    const pixelsPerMeter = gridSize / 1.5;
+    
+    // Centro do token de origem (âncora)
+    const ox = (origin.x * gridSize) + (gridSize / 2);
+    const oy = (origin.y * gridSize) + (gridSize / 2);
+
+    let targetX = x;
+    let targetY = y;
+
+    // 1. Limite de Alcance (Max Range)
+    if (ability.range && ability.range > 0) {
+      const maxRangePx = ability.range * pixelsPerMeter;
+      const dx = x - ox;
+      const dy = y - oy;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist > maxRangePx) {
+        const ratio = maxRangePx / dist;
+        targetX = ox + dx * ratio;
+        targetY = oy + dy * ratio;
+      }
+    }
+
+    // 2. Snap vs Fluid Aiming
+    // Cones e Linhas precisam de mira fluida (360º) para não ficarem "travados" em 45 graus.
+    // Círculos e ataques diretos geralmente focam uma célula específica.
+    const needsFluid = ability.areaShape === 'cone' || ability.areaShape === 'line';
+
+    if (!needsFluid) {
+      targetX = Math.floor(targetX / gridSize) * gridSize + (gridSize / 2);
+      targetY = Math.floor(targetY / gridSize) * gridSize + (gridSize / 2);
+    }
+
+    this.previewTarget.set({ x: targetX, y: targetY });
   }
 
   cancelPreview() {
