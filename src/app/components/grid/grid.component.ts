@@ -765,11 +765,23 @@ export class GridComponent {
       return;
     }
 
-    const position = event.source.getFreeDragPosition();
+    let centerX: number;
+    let centerY: number;
     
-    // Calculate the center of the token, then find which grid cell that center belongs to
-    const centerX = position.x + size / 2;
-    const centerY = position.y + size / 2;
+    // Utilize event.dropPoint for maximum accuracy, bypassing any internal transform issues
+    if (this.boundary && event.dropPoint) {
+      const rect = this.boundary.nativeElement.getBoundingClientRect();
+      // Translate viewport coordinate to map coordinate
+      const dropLocalX = (event.dropPoint.x - rect.left) / this.combat.zoom();
+      const dropLocalY = (event.dropPoint.y - rect.top) / this.combat.zoom();
+      
+      centerX = dropLocalX;
+      centerY = dropLocalY;
+    } else {
+      const position = event.source.getFreeDragPosition();
+      centerX = position.x + size / 2;
+      centerY = position.y + size / 2;
+    }
     
     let newGridX = Math.floor(centerX / this.gridSize);
     let newGridY = Math.floor(centerY / this.gridSize);
@@ -790,7 +802,14 @@ export class GridComponent {
     // Snap visually to exactly where it should be on the grid
     const targetPx = newGridX * this.gridSize + (this.gridSize - size) / 2;
     const targetPy = newGridY * this.gridSize + (this.gridSize - size) / 2;
-    event.source.setFreeDragPosition({ x: targetPx, y: targetPy });
+    
+    // Reset standard transform first, then apply free drag constraints securely via Promise/setTimeout
+    setTimeout(() => {
+      event.source.setFreeDragPosition({ x: targetPx, y: targetPy });
+      // Minor refresh hack to ensure CdkDrag doesn't get stuck internally
+      event.source._dragRef.reset();
+      event.source.setFreeDragPosition({ x: targetPx, y: targetPy });
+    });
     
     this.syncToFirestore(token.id, newGridX, newGridY);
   }
