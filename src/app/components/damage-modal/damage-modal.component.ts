@@ -34,81 +34,110 @@ import { DndCoreEngineService } from '../../services/dnd-core-engine.service';
           <!-- Body -->
           <div class="p-5 space-y-4">
             
-            <div class="flex items-center gap-3 bg-stone-800/50 p-3 rounded border border-stone-700/50">
-              <mat-icon class="text-red-500">local_fire_department</mat-icon>
-              <div>
-                <h3 class="font-bold text-stone-200">{{ state()?.ability?.name }}</h3>
-                <p class="text-xs text-stone-400">
-                  Resolução de Dano
-                  @if (state()?.isCritical) {
-                    <span class="text-amber-400 font-bold ml-1">(CRÍTICO!)</span>
-                  }
-                </p>
+            <div class="flex flex-col gap-2 bg-stone-800/50 p-3 rounded border border-stone-700/50">
+              <div class="flex items-center gap-3">
+                <mat-icon class="text-red-500">local_fire_department</mat-icon>
+                <div>
+                  <h3 class="font-bold text-stone-200">{{ state()?.ability?.name }}</h3>
+                  <p class="text-xs text-stone-400">Resolução de Dano</p>
+                </div>
               </div>
-            </div>
 
-            <!-- Parsing Display -->
-            <div class="bg-stone-800 p-4 rounded border border-stone-700 text-center space-y-2">
-              <p class="text-sm text-stone-400">Role os dados físicos na mesa:</p>
-              
-              <div class="flex justify-center items-end gap-2 my-2">
-                @if (parsedDamage().diceType) {
-                  <div class="flex flex-col items-center">
-                    <span class="text-[10px] text-stone-500 uppercase font-bold">Quant.</span>
-                    <span class="text-2xl font-bold text-stone-200">
-                      {{ parsedDamage().diceCount }}{{ state()?.isCritical ? 'x2' : '' }}
-                    </span>
-                  </div>
-                  <span class="text-xl font-bold text-stone-600 mb-1">x</span>
-                  <div class="flex flex-col items-center">
-                    <span class="text-[10px] text-stone-500 uppercase font-bold">Dado</span>
-                    <span class="text-2xl font-bold text-amber-500">{{ parsedDamage().diceType }}</span>
-                  </div>
-                } @else {
-                  <div class="flex flex-col items-center">
-                    <span class="text-[10px] text-stone-500 uppercase font-bold">Dano Fixo</span>
-                    <span class="text-2xl font-bold text-amber-500">{{ parsedDamage().modifier }}</span>
+              <!-- Hit Tier Indicator -->
+              @switch (state()?.hitTier) {
+                @case ('grazing') {
+                  <div class="bg-amber-500/20 border border-amber-500/50 rounded p-2 text-center">
+                    <p class="text-xs font-bold text-amber-500 uppercase">Acerto de Raspão!</p>
+                    <p class="text-[10px] text-amber-400/80">O dano será reduzido pela metade (Math.floor).</p>
                   </div>
                 }
-                
-                @if (parsedDamage().modifier !== 0 && parsedDamage().diceType) {
-                  <span class="text-xl font-bold text-stone-600 mb-1">
-                    {{ parsedDamage().modifier > 0 ? '+' : '-' }}
-                  </span>
-                  <div class="flex flex-col items-center">
-                    <span class="text-[10px] text-stone-500 uppercase font-bold">Modificador</span>
-                    <span class="text-2xl font-bold text-stone-300">{{ Math.abs(parsedDamage().modifier) }}</span>
+                @case ('critical') {
+                  <div class="bg-red-500/20 border border-red-500/50 rounded p-2 text-center animate-pulse">
+                    <p class="text-xs font-bold text-red-500 uppercase">CRÍTICO!</p>
+                    <p class="text-[10px] text-red-400/80">Dano Máximo Aplicado Automaticamente!</p>
                   </div>
                 }
-              </div>
-
-              <p class="text-xs text-stone-500 mt-2 font-mono bg-stone-900/50 p-1 rounded">
-                Dano Base: "{{ state()?.ability?.damage }}"
-              </p>
-            </div>
-
-            <!-- Input Result -->
-            <div class="space-y-3 pt-2 flex flex-col items-center">
-              <label class="text-xs font-bold text-stone-400 uppercase tracking-widest block text-center">
-                Insira a soma dos dados obtidos
-              </label>
-              <div class="w-1/2">
-                <input type="number" [(ngModel)]="manualRoll" 
-                       class="w-full bg-stone-800 border rounded px-3 py-2 text-center font-mono font-bold text-lg focus:outline-none"
-                       placeholder="Valor"
-                       [class.border-red-500]="errorMessage()"
-                       [class.border-stone-600]="!errorMessage()"
-                       [class.focus:border-red-500]="!errorMessage()"
-                       [attr.min]="minPossibleRoll()"
-                       [attr.max]="maxPossibleRoll()"
-                       (keyup.enter)="applyDamage()">
-              </div>
-              @if (errorMessage()) {
-                <p class="text-xs text-red-500 font-bold text-center bg-red-500/10 py-1 px-4 rounded">
-                  {{ errorMessage() }}
-                </p>
+                @default {
+                  <div class="bg-green-500/20 border border-green-500/50 rounded p-2 text-center">
+                    <p class="text-xs font-bold text-green-500 uppercase">Acerto Sólido!</p>
+                    <p class="text-[10px] text-green-400/80">Dano normal aplicado.</p>
+                  </div>
+                }
               }
             </div>
+
+            @if (state()?.hitTier !== 'critical') {
+              <!-- Parsing Display -->
+              <div class="bg-stone-800 p-4 rounded border border-stone-700 text-center space-y-2">
+                <p class="text-sm text-stone-400">Role os dados físicos na mesa:</p>
+                
+                <div class="flex justify-center items-end gap-2 my-2">
+                  @if (parsedDamage().diceType) {
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-stone-500 uppercase font-bold">Quant.</span>
+                      <span class="text-2xl font-bold text-stone-200">
+                        {{ parsedDamage().diceCount }}
+                      </span>
+                    </div>
+                    <span class="text-xl font-bold text-stone-600 mb-1">x</span>
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-stone-500 uppercase font-bold">Dado</span>
+                      <span class="text-2xl font-bold text-amber-500">{{ parsedDamage().diceType }}</span>
+                    </div>
+                  } @else {
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-stone-500 uppercase font-bold">Dano Fixo</span>
+                      <span class="text-2xl font-bold text-amber-500">{{ parsedDamage().modifier }}</span>
+                    </div>
+                  }
+                  
+                  @if (parsedDamage().modifier !== 0 && parsedDamage().diceType) {
+                    <span class="text-xl font-bold text-stone-600 mb-1">
+                      {{ parsedDamage().modifier > 0 ? '+' : '-' }}
+                    </span>
+                    <div class="flex flex-col items-center">
+                      <span class="text-[10px] text-stone-500 uppercase font-bold">Modificador</span>
+                      <span class="text-2xl font-bold text-stone-300">{{ Math.abs(parsedDamage().modifier) }}</span>
+                    </div>
+                  }
+                </div>
+
+                <p class="text-xs text-stone-500 mt-2 font-mono bg-stone-900/50 p-1 rounded">
+                  Dano Base: "{{ state()?.ability?.damage }}"
+                </p>
+              </div>
+
+              <!-- Input Result -->
+              <div class="space-y-3 pt-2 flex flex-col items-center">
+                <label class="text-xs font-bold text-stone-400 uppercase tracking-widest block text-center">
+                  Insira a soma dos dados obtidos
+                </label>
+                <div class="w-1/2">
+                  <input type="number" [(ngModel)]="manualRoll" 
+                         class="w-full bg-stone-800 border rounded px-3 py-2 text-center font-mono font-bold text-lg focus:outline-none"
+                         placeholder="Valor"
+                         [class.border-red-500]="errorMessage()"
+                         [class.border-stone-600]="!errorMessage()"
+                         [class.focus:border-red-500]="!errorMessage()"
+                         [attr.min]="minPossibleRoll()"
+                         [attr.max]="maxPossibleRoll()"
+                         (keyup.enter)="applyDamage()">
+                </div>
+                @if (errorMessage()) {
+                  <p class="text-xs text-red-500 font-bold text-center bg-red-500/10 py-1 px-4 rounded">
+                    {{ errorMessage() }}
+                  </p>
+                }
+              </div>
+            } @else {
+              <!-- Critical Auto-calculate Display -->
+              <div class="bg-stone-800 p-4 rounded border border-stone-700 text-center space-y-2">
+                <p class="text-sm text-stone-400">Dano calculado em seu limite máximo.</p>
+                <p class="text-xs text-stone-500 mt-2 font-mono bg-stone-900/50 p-1 rounded">
+                  Dano Base: "{{ state()?.ability?.damage }}"
+                </p>
+              </div>
+            }
             
             <div class="flex justify-between items-center bg-stone-900 p-3 rounded border border-stone-700">
                <span class="text-sm font-bold text-stone-400 uppercase">Dano Total Resultante</span>
@@ -121,7 +150,7 @@ import { DndCoreEngineService } from '../../services/dnd-core-engine.service';
                 CANCELAR
               </button>
               <button (click)="applyDamage()" 
-                      [disabled]="manualRoll() === null || errorMessage() !== null"
+                      [disabled]="(state()?.hitTier !== 'critical' && parsedDamage().diceType && manualRoll() === null) || errorMessage() !== null"
                       class="flex-1 py-3 bg-red-600 hover:bg-red-500 disabled:bg-stone-800 disabled:text-stone-600 text-white font-bold rounded transition-colors flex items-center justify-center gap-2">
                 <mat-icon>gavel</mat-icon>
                 APLICAR
@@ -156,29 +185,31 @@ export class DamageModalComponent {
     return this.parseDamageString(s.ability.damage);
   });
 
+  hitTier = computed(() => this.state()?.hitTier || 'solid');
+
+  rawMaxDiceDamage = computed(() => {
+    const parsed = this.parsedDamage();
+    if (!parsed.diceType) return 0;
+    const rawDiceType = parseInt(parsed.diceType.replace('d', ''), 10);
+    return parsed.diceCount * rawDiceType;
+  });
+
   maxPossibleRoll = computed(() => {
-    const s = this.state();
     const parsed = this.parsedDamage();
     if (!parsed.diceType) return null;
-    
-    // Extract the raw dice value, e.g. "d8" -> 8
     const rawDiceType = parseInt(parsed.diceType.replace('d', ''), 10);
-    // If critical, count is doubled on the physical table usually
-    const multiplier = s?.isCritical ? 2 : 1; 
-    
-    return parsed.diceCount * multiplier * rawDiceType;
+    return parsed.diceCount * rawDiceType;
   });
 
   minPossibleRoll = computed(() => {
-    const s = this.state();
     const parsed = this.parsedDamage();
     if (!parsed.diceType) return null;
-    
-    const multiplier = s?.isCritical ? 2 : 1;
-    return parsed.diceCount * multiplier; // Min roll is physically 1 per dice
+    return parsed.diceCount;
   });
 
   errorMessage = computed(() => {
+    if (this.hitTier() === 'critical') return null; // No manual input on critical
+
     const val = this.manualRoll();
     const max = this.maxPossibleRoll();
     const min = this.minPossibleRoll();
@@ -191,17 +222,30 @@ export class DamageModalComponent {
   });
 
   calculatedTotal = computed(() => {
-    const manual = this.manualRoll();
+    const tier = this.hitTier();
     const parsed = this.parsedDamage();
+    
+    // Auto-calcula Dano Máximo no Crítico
+    if (tier === 'critical') {
+      const maxRoll = this.rawMaxDiceDamage();
+      return Math.max(0, maxRoll + parsed.modifier);
+    }
+    
+    const manual = this.manualRoll();
     
     // Se não tiver type de dado (ex: dano fixo tipo "5"), usa apenas o modifier
     if (!parsed.diceType && parsed.modifier > 0 && manual === null) {
-      return parsed.modifier;
+      return tier === 'grazing' ? Math.floor(parsed.modifier / 2) : parsed.modifier;
     }
     
     if (manual === null) return 0;
     
-    return Math.max(0, manual + parsed.modifier);
+    let rawTotal = manual + parsed.modifier;
+    if (tier === 'grazing') {
+      rawTotal = Math.floor(rawTotal / 2);
+    }
+    
+    return Math.max(0, rawTotal);
   });
 
   close() {

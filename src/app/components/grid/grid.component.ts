@@ -323,7 +323,7 @@ export class GridComponent {
     const ability = this.combat.previewAbility();
     const origin = this.combat.previewOrigin();
     const target = this.combat.previewTarget();
-    if (!ability || !origin || !target) return '';
+    if (!ability || !origin || !target || origin.x === undefined || origin.y === undefined) return '';
 
     const gridSize = this.gridSize;
     const pixelsPerMeter = gridSize / 1.5;
@@ -433,6 +433,8 @@ export class GridComponent {
   }
 
   isTokenInArea(token: Token, ability: Ability, origin: {x: number, y: number}, target: {x: number, y: number}): boolean {
+    if (!token || !origin || !target || origin.x === undefined || origin.y === undefined || token.x === undefined || token.y === undefined) return false;
+
     const gridSize = this.gridSize;
     const pixelsPerMeter = gridSize / 1.5;
     
@@ -639,30 +641,43 @@ export class GridComponent {
     const originPos = this.combat.previewOrigin();
     
     if (ability && originPos) {
-      // Find the token that is using the ability (the origin)
-      const originToken = this.tokens().find(t => t.x === originPos.x && t.y === originPos.y);
+      // Handle the case where originPos is synthetic (clicked empty floor) and doesn't map to a real token yet
+      let originToken: Token | undefined;
       
+      if (originPos.id) {
+         originToken = this.tokens().find(t => t.id === originPos.id);
+      } else {
+         originToken = this.tokens().find(t => t.x === originPos.x && t.y === originPos.y);
+      }
+      
+      // If no valid origin token was found using the ability, abort elegantly
+      if (!originToken) {
+         this.combat.addNotification(`Ação cancelada: Nenhum token válido como origem do ataque.`, 'error');
+         this.combat.cancelPreview();
+         return;
+      }
+
       // Spell uses check
-      if (originToken && ability.category === 'spell' && originToken.spellUses !== undefined && originToken.spellUses <= 0) {
+      if (ability.category === 'spell' && originToken.spellUses !== undefined && originToken.spellUses <= 0) {
         this.combat.addNotification(`${originToken.name} não possui mais usos de magia para usar ${ability.name}!`, 'error');
         this.combat.cancelPreview();
         return;
       }
 
       // Ability specific uses check
-      if (originToken && ability.maxUses && (ability.uses === undefined || ability.uses <= 0)) {
+      if (ability.maxUses && (ability.uses === undefined || ability.uses <= 0)) {
         this.combat.addNotification(`${originToken.name} não possui mais usos de ${ability.name}!`, 'error');
         this.combat.cancelPreview();
         return;
       }
 
       // Deduct spell use
-      if (originToken && ability.category === 'spell' && originToken.spellUses !== undefined && originToken.spellUses > 0) {
+      if (ability.category === 'spell' && originToken.spellUses !== undefined && originToken.spellUses > 0) {
         this.combat.updateToken(originToken.id, { spellUses: originToken.spellUses - 1 });
       }
 
       // Deduct ability specific uses
-      if (originToken && ability.maxUses && ability.uses !== undefined && ability.uses > 0) {
+      if (ability.maxUses && ability.uses !== undefined && ability.uses > 0) {
         const updatedAbilities = originToken.abilities?.map(a => 
           a.id === ability.id ? { ...a, uses: a.uses! - 1 } : a
         );
@@ -671,15 +686,55 @@ export class GridComponent {
         }
       }
 
+      // If attack doesn't have an area shape, it's a direct targeting attack. 
+      // It must be dropped onto an Enemy/Valid token to function.
+      if (!ability.areaShape || ability.areaShape === 'none') {
+        const targetGrid = this.combat.previewTarget();
+        if (!targetGrid) {
+            this.combat.cancelPreview();
+            return;
+        }
+
+        // The exact target token at the hovered grid coordinates:
+        const gridSize = this.gridSize;
+        const targetGridX = Math.floor(targetGrid.x / gridSize);
+        const targetGridY = Math.floor(targetGrid.y / gridSize);
+
+        const targetToken = this.tokens().find(t => Math.floor(t.x) === targetGridX && Math.floor(t.y) === targetGridY && t.id !== originToken?.id);
+
+        if (!targetToken) {
+           this.combat.addNotification(`Nenhum alvo válido nessa coordenada para um ataque direto.`, 'error');
+           this.combat.cancelPreview();
+           return;
+        }
+
+        // Check if it's an attack
+        const isAttack = ability.category === 'weapon' || ability.attackBonus !== undefined || ability.damage;
+
+        if (isAttack) {
+           this.combat.openAttackModal(originToken, [targetToken], ability);
+        } else if (ability.healing) {
+           const result = this.combat.resolveHealing(targetToken, ability);
+           this.combat.addNotification(result.log, 'info');
+        }
+
+        this.combat.cancelPreview();
+        return;
+      }
+
+      // --- Area Ability Execution (Cone, Line, Circle) ---
+
       // Filter out the origin token from the affected tokens
       let affected = this.affectedTokens().filter(t => t.id !== originToken?.id);
       
-      // Remove dead tokens unless it's a healing ability
+      // Remove dead tokens unless it's a healing ability (AoE Healing)
       if (!ability.healing) {
         affected = affected.filter(t => t.hp > 0);
       }
 
       if (affected.length === 0) {
+        // AoEs missing targets don't return an error, you just hit the floor.
+        this.combat.addNotification(`A ${ability.name} atingiu apenas o chão.`, 'info');
         this.combat.cancelPreview();
         return;
       }

@@ -248,9 +248,19 @@ export class AttackModalComponent {
     const res = this.result();
     if (!s || !res || !this.isHit() || !s.ability.damage) return;
 
-    // Use string from DB, but we could also calculate the extra modifier from stats here 
-    // depending on the RPG system string strategy. Assuming the user requested standard parser for now:
-    this.combat.openDamageModal(s.attacker, s.targets, s.ability, res.isCritical);
+    let hitTier: 'grazing' | 'solid' | 'critical' = 'solid';
+    const totalAttack = res.total;
+    const ac = this.targetAC();
+
+    if (res.isCritical || res.naturalRoll === 20) {
+      hitTier = 'critical';
+    } else if (totalAttack >= ac && totalAttack <= ac + 2) {
+      hitTier = 'grazing';
+    } else {
+      hitTier = 'solid';
+    }
+
+    this.combat.openDamageModal(s.attacker, s.targets, s.ability, hitTier);
     
     this.close();
   }
