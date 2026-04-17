@@ -640,7 +640,9 @@ export class GridComponent {
     const ability = this.combat.previewAbility();
     const originPos = this.combat.previewOrigin();
     
-    if (ability && originPos) {
+    // Blindagem de Ataque: Null check crítico para evitar crashs e corrupção de estado.
+    // Garante que originPos e suas coordenadas existam antes de qualquer cálculo.
+    if (ability && originPos && originPos.x !== undefined && originPos.y !== undefined) {
       // Handle the case where originPos is synthetic (clicked empty floor) and doesn't map to a real token yet
       let originToken: Token | undefined;
       

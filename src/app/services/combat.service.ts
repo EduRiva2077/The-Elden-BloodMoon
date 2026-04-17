@@ -435,6 +435,18 @@ export class CombatService {
   }
 
   cancelPreview() {
+    const originId = this.previewOriginId();
+    if (originId) {
+      // Reset Tático: Force the origin token to snap back to an integer grid coordinate
+      // to heal any state corruption that might have occurred during drag/attack.
+      const token = this.tokens().find(t => t.id === originId);
+      if (token) {
+        this.updateToken(originId, { 
+          x: Math.floor(token.x), 
+          y: Math.floor(token.y) 
+        });
+      }
+    }
     this.previewAbility.set(null);
     this.previewOriginId.set(null);
     this.previewTarget.set(null);
