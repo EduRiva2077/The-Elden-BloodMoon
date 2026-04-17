@@ -16,15 +16,15 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
   imports: [CommonModule, MatIconModule, ReactiveFormsModule, FormsModule, ActionMenuComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="w-80 h-full bg-stone-900 border-l border-stone-800 flex flex-col text-stone-300 relative">
+    <div class="w-72 h-full bg-stone-900 border-l border-stone-800 flex flex-col text-stone-300 relative">
       <!-- Tabs -->
-      <div class="flex border-b border-stone-800 text-xs font-mono">
+      <div class="flex border-b border-stone-800 text-sm font-mono">
         @if (selectedToken()?.type !== 'item') {
-          <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'sheet'" [class.border-b-2]="combat.rightPanelTab() === 'sheet'" [class.border-amber-500]="combat.rightPanelTab() === 'sheet'" [class.bg-stone-800]="combat.rightPanelTab() === 'sheet'" (click)="combat.rightPanelTab.set('sheet')">Ficha</button>
+          <button class="flex-1 py-4 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'sheet'" [class.border-b-2]="combat.rightPanelTab() === 'sheet'" [class.border-amber-500]="combat.rightPanelTab() === 'sheet'" [class.bg-stone-800]="combat.rightPanelTab() === 'sheet'" (click)="combat.rightPanelTab.set('sheet')">Ficha</button>
         }
-        <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'inventory'" [class.border-b-2]="combat.rightPanelTab() === 'inventory'" [class.border-amber-500]="combat.rightPanelTab() === 'inventory'" [class.bg-stone-800]="combat.rightPanelTab() === 'inventory'" (click)="combat.rightPanelTab.set('inventory')">Inventário</button>
+        <button class="flex-1 py-4 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'inventory'" [class.border-b-2]="combat.rightPanelTab() === 'inventory'" [class.border-amber-500]="combat.rightPanelTab() === 'inventory'" [class.bg-stone-800]="combat.rightPanelTab() === 'inventory'" (click)="combat.rightPanelTab.set('inventory')">Inventário</button>
         @if ((auth.currentUser()?.role === 'GM' || selectedToken()?.controlledBy === auth.currentUser()?.id) && selectedToken()?.type !== 'item') {
-          <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'actions'" [class.border-b-2]="combat.rightPanelTab() === 'actions'" [class.border-amber-500]="combat.rightPanelTab() === 'actions'" [class.bg-stone-800]="combat.rightPanelTab() === 'actions'" (click)="combat.rightPanelTab.set('actions')">Ações</button>
+          <button class="flex-1 py-4 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'actions'" [class.border-b-2]="combat.rightPanelTab() === 'actions'" [class.border-amber-500]="combat.rightPanelTab() === 'actions'" [class.bg-stone-800]="combat.rightPanelTab() === 'actions'" (click)="combat.rightPanelTab.set('actions')">Ações</button>
         }
       </div>
       
@@ -999,38 +999,38 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                     </div>
                   </div>
 
-                  <div class="grid grid-cols-2 gap-2">
-                    <div class="flex flex-col gap-1">
-                      <label for="class" class="text-[10px] text-stone-500 uppercase">Classe</label>
-                      <input id="class" formControlName="class" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
+                  <div class="grid grid-cols-2 gap-3">
+                    <div class="flex flex-col gap-1.5">
+                      <label for="class" class="text-xs text-stone-500 uppercase font-bold tracking-wider">Classe</label>
+                      <input id="class" formControlName="class" class="bg-stone-900 border border-stone-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
                     </div>
-                    <div class="flex flex-col gap-1">
-                      <label for="level" class="text-[10px] text-stone-500 uppercase">Nível</label>
-                      <input id="level" type="number" formControlName="level" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
+                    <div class="flex flex-col gap-1.5">
+                      <label for="level" class="text-xs text-stone-500 uppercase font-bold tracking-wider">Nível</label>
+                      <input id="level" type="number" formControlName="level" class="bg-stone-900 border border-stone-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
                     </div>
-                    <div class="flex flex-col gap-1">
-                      <label for="background" class="text-[10px] text-stone-500 uppercase">Antecedente</label>
-                      <input id="background" formControlName="background" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
+                    <div class="flex flex-col gap-1.5">
+                      <label for="background" class="text-xs text-stone-500 uppercase font-bold tracking-wider">Antecedente</label>
+                      <input id="background" formControlName="background" class="bg-stone-900 border border-stone-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
                     </div>
-                    <div class="flex flex-col gap-1">
-                      <label for="playerName" class="text-[10px] text-stone-500 uppercase">Nome do Jogador</label>
-                      <input id="playerName" formControlName="playerName" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
+                    <div class="flex flex-col gap-1.5">
+                      <label for="playerName" class="text-xs text-stone-500 uppercase font-bold tracking-wider">Nome do Jogador</label>
+                      <input id="playerName" formControlName="playerName" class="bg-stone-900 border border-stone-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
                     </div>
-                    <div class="flex flex-col gap-1">
-                      <label for="race" class="text-[10px] text-stone-500 uppercase">Raça</label>
-                      <input id="race" formControlName="race" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
+                    <div class="flex flex-col gap-1.5">
+                      <label for="race" class="text-xs text-stone-500 uppercase font-bold tracking-wider">Raça</label>
+                      <input id="race" formControlName="race" class="bg-stone-900 border border-stone-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
                     </div>
-                    <div class="flex flex-col gap-1">
-                      <label for="alignment" class="text-[10px] text-stone-500 uppercase">Tendência</label>
-                      <input id="alignment" formControlName="alignment" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
+                    <div class="flex flex-col gap-1.5">
+                      <label for="alignment" class="text-xs text-stone-500 uppercase font-bold tracking-wider">Tendência</label>
+                      <input id="alignment" formControlName="alignment" class="bg-stone-900 border border-stone-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
                     </div>
-                    <div class="flex flex-col gap-1">
-                      <label for="xp" class="text-[10px] text-stone-500 uppercase">XP</label>
-                      <input id="xp" type="number" formControlName="xp" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
+                    <div class="flex flex-col gap-1.5">
+                      <label for="xp" class="text-xs text-stone-500 uppercase font-bold tracking-wider">XP</label>
+                      <input id="xp" type="number" formControlName="xp" class="bg-stone-900 border border-stone-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
                     </div>
-                    <div class="flex flex-col gap-1">
-                      <label for="hitDie" class="text-[10px] text-stone-500 uppercase">Dado de Vida (d?)</label>
-                      <input id="hitDie" type="number" formControlName="hitDie" placeholder="ex: 10" class="bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
+                    <div class="flex flex-col gap-1.5">
+                      <label for="hitDie" class="text-xs text-stone-500 uppercase font-bold tracking-wider">Dado de Vida (d?)</label>
+                      <input id="hitDie" type="number" formControlName="hitDie" placeholder="ex: 10" class="bg-stone-900 border border-stone-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500">
                     </div>
                   </div>
 
@@ -1123,53 +1123,53 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                       </button>
                     }
                   </div>
-                  <div class="grid grid-cols-2 gap-x-2 gap-y-1 mt-2 text-stone-400">
-                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">favorite</mat-icon> <span class="text-stone-500">PV:</span> {{ sheet.hp }}/{{ sheet.maxHp }}</div>
-                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">auto_awesome</mat-icon> <span class="text-stone-500">Magias:</span> {{ sheet.spellUses }}/{{ sheet.maxSpellUses }}</div>
-                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">school</mat-icon> <span class="text-stone-500">Classe:</span> {{ sheet.class }}</div>
-                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">military_tech</mat-icon> <span class="text-stone-500">Nível:</span> {{ sheet.level }}</div>
-                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">history</mat-icon> <span class="text-stone-500">Antecedente:</span> {{ sheet.background }}</div>
-                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">person</mat-icon> <span class="text-stone-500">Jogador:</span> {{ sheet.playerName }}</div>
-                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">groups</mat-icon> <span class="text-stone-500">Raça:</span> {{ sheet.race }}</div>
-                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">balance</mat-icon> <span class="text-stone-500">Tendência:</span> {{ sheet.alignment }}</div>
-                    <div class="flex items-center gap-1"><mat-icon class="text-[10px] text-stone-500" style="font-size: 10px; width: 10px; height: 10px;">trending_up</mat-icon> <span class="text-stone-500">XP:</span> {{ sheet.xp }}</div>
+                <div class="grid grid-cols-2 gap-x-3 gap-y-2 mt-3 text-stone-400">
+                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">favorite</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">PV:</span> {{ sheet.hp }}/{{ sheet.maxHp }}</div>
+                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">auto_awesome</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">Magias:</span> {{ sheet.spellUses }}/{{ sheet.maxSpellUses }}</div>
+                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">school</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">Classe:</span> {{ sheet.class }}</div>
+                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">military_tech</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">Nível:</span> {{ sheet.level }}</div>
+                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">history</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">Antecedente:</span> {{ sheet.background }}</div>
+                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">person</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">Jogador:</span> {{ sheet.playerName }}</div>
+                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">groups</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">Raça:</span> {{ sheet.race }}</div>
+                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">balance</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">Tendência:</span> {{ sheet.alignment }}</div>
+                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">trending_up</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">XP:</span> {{ sheet.xp }}</div>
                   </div>
                 </div>
 
                 <!-- Combat Stats -->
-                <div class="flex justify-between items-center bg-stone-900 p-2 rounded border border-stone-700">
+                <div class="flex justify-between items-center bg-stone-900 p-4 rounded border border-stone-700 shadow-inner">
                   <div class="text-center flex flex-col items-center">
-                    <div class="text-[10px] text-stone-500 uppercase flex items-center gap-1">
-                      <mat-icon style="font-size: 10px; width: 10px; height: 10px;">security</mat-icon>
+                    <div class="text-xs text-stone-500 uppercase font-bold flex items-center gap-1.5 tracking-tighter">
+                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">security</mat-icon>
                       CA
                     </div>
-                    <div class="font-bold text-lg text-amber-500">{{ sheet.ac }}</div>
+                    <div class="font-bold text-2xl text-amber-500">{{ sheet.ac }}</div>
                   </div>
                   <div class="text-center flex flex-col items-center">
-                    <div class="text-[10px] text-stone-500 uppercase flex items-center gap-1">
-                      <mat-icon style="font-size: 10px; width: 10px; height: 10px;">timer</mat-icon>
+                    <div class="text-xs text-stone-500 uppercase font-bold flex items-center gap-1.5 tracking-tighter">
+                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">timer</mat-icon>
                       Iniciativa
                     </div>
-                    <div class="font-bold text-lg text-amber-500">{{ sheet.initiative >= 0 ? '+' : '' }}{{ sheet.initiative }}</div>
+                    <div class="font-bold text-2xl text-amber-500">{{ sheet.initiative >= 0 ? '+' : '' }}{{ sheet.initiative }}</div>
                   </div>
                   <div class="text-center flex flex-col items-center">
-                    <div class="text-[10px] text-stone-500 uppercase flex items-center gap-1">
-                      <mat-icon style="font-size: 10px; width: 10px; height: 10px;">directions_run</mat-icon>
-                      Deslocamento
+                    <div class="text-xs text-stone-500 uppercase font-bold flex items-center gap-1.5 tracking-tighter">
+                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">directions_run</mat-icon>
+                      Veloc.
                     </div>
-                    <div class="font-bold text-lg text-amber-500">{{ sheet.speed }} Metros</div>
+                    <div class="font-bold text-2xl text-amber-500">{{ sheet.speed }}m</div>
                   </div>
                 </div>
 
                 <!-- Attributes -->
-                <div class="grid grid-cols-3 gap-2">
-                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center flex flex-col items-center">
-                    <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
-                      <mat-icon style="font-size: 10px; width: 10px; height: 10px;">fitness_center</mat-icon>
+                <div class="grid grid-cols-3 gap-3">
+                  <div class="bg-stone-900 border border-stone-700 rounded p-3 text-center flex flex-col items-center shadow-sm">
+                    <div class="text-xs text-stone-500 uppercase font-black flex items-center gap-1">
+                      <mat-icon style="font-size: 12px; width: 12px; height: 12px;">fitness_center</mat-icon>
                       FOR
                     </div>
-                    <div class="font-bold text-lg">{{ sheet.str }}</div>
-                    <div class="text-[10px] text-stone-400">{{ mathService.calculateModifier(sheet.str) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.str) }}</div>
+                    <div class="font-bold text-2xl">{{ sheet.str }}</div>
+                    <div class="text-xs text-stone-400 font-mono">{{ mathService.calculateModifier(sheet.str) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.str) }}</div>
                   </div>
                   <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center flex flex-col items-center">
                     <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">

@@ -19,11 +19,13 @@ import { DndCoreEngineService } from '../../services/dnd-core-engine.service';
           <div class="bg-stone-800 p-4 border-b border-stone-700 flex items-center justify-between">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded-full border-2 border-red-500 overflow-hidden bg-stone-900">
-                <img *ngIf="state()?.attacker?.imageUrl" [src]="state()?.attacker?.imageUrl" class="w-full h-full object-cover" referrerpolicy="no-referrer">
+                @if (state()?.attacker?.imageUrl) {
+                  <img [src]="state()?.attacker?.imageUrl" class="w-full h-full object-cover" referrerpolicy="no-referrer" alt="Atacante">
+                }
               </div>
               <div>
-                <h2 class="text-lg font-bold text-red-500 leading-tight">Dano</h2>
-                <p class="text-xs text-stone-400">{{ state()?.attacker?.name }} ➔ {{ targetNames() }}</p>
+                <h2 class="text-xl font-bold text-red-500 leading-tight">Dano</h2>
+                <p class="text-sm text-stone-400">{{ state()?.attacker?.name }} ➔ {{ targetNames() }}</p>
               </div>
             </div>
             <button (click)="close()" class="text-stone-400 hover:text-white transition-colors">
@@ -34,33 +36,33 @@ import { DndCoreEngineService } from '../../services/dnd-core-engine.service';
           <!-- Body -->
           <div class="p-5 space-y-4">
             
-            <div class="flex flex-col gap-2 bg-stone-800/50 p-3 rounded border border-stone-700/50">
-              <div class="flex items-center gap-3">
-                <mat-icon class="text-red-500">local_fire_department</mat-icon>
+            <div class="flex flex-col gap-3 bg-stone-800/50 p-4 rounded border border-stone-700/50">
+              <div class="flex items-center gap-4">
+                <mat-icon class="text-red-500" style="font-size: 24px; width: 24px; height: 24px;">local_fire_department</mat-icon>
                 <div>
-                  <h3 class="font-bold text-stone-200">{{ state()?.ability?.name }}</h3>
-                  <p class="text-xs text-stone-400">Resolução de Dano</p>
+                  <h3 class="font-bold text-stone-200 text-lg">{{ state()?.ability?.name }}</h3>
+                  <p class="text-sm text-stone-400">Resolução de Dano</p>
                 </div>
               </div>
 
               <!-- Hit Tier Indicator -->
               @switch (state()?.hitTier) {
                 @case ('grazing') {
-                  <div class="bg-amber-500/20 border border-amber-500/50 rounded p-2 text-center">
-                    <p class="text-xs font-bold text-amber-500 uppercase">Acerto de Raspão!</p>
-                    <p class="text-[10px] text-amber-400/80">O dano será reduzido pela metade (Math.floor).</p>
+                  <div class="bg-amber-500/20 border border-amber-500/50 rounded p-3 text-center">
+                    <p class="text-sm font-bold text-amber-500 uppercase tracking-wide">Acerto de Raspão!</p>
+                    <p class="text-xs text-amber-400/80">O dano será reduzido pela metade (Math.floor).</p>
                   </div>
                 }
                 @case ('critical') {
-                  <div class="bg-red-500/20 border border-red-500/50 rounded p-2 text-center animate-pulse">
-                    <p class="text-xs font-bold text-red-500 uppercase">CRÍTICO!</p>
-                    <p class="text-[10px] text-red-400/80">Dano Máximo Aplicado Automaticamente!</p>
+                  <div class="bg-red-500/20 border border-red-500/50 rounded p-3 text-center animate-pulse">
+                    <p class="text-sm font-bold text-red-500 uppercase tracking-widest">CRÍTICO!</p>
+                    <p class="text-xs text-red-400/80">Dano Máximo Aplicado Automaticamente!</p>
                   </div>
                 }
                 @default {
-                  <div class="bg-green-500/20 border border-green-500/50 rounded p-2 text-center">
-                    <p class="text-xs font-bold text-green-500 uppercase">Acerto Sólido!</p>
-                    <p class="text-[10px] text-green-400/80">Dano normal aplicado.</p>
+                  <div class="bg-green-500/20 border border-green-500/50 rounded p-3 text-center">
+                    <p class="text-sm font-bold text-green-500 uppercase tracking-wide">Acerto Sólido!</p>
+                    <p class="text-xs text-green-400/80">Dano normal aplicado.</p>
                   </div>
                 }
               }
@@ -68,63 +70,63 @@ import { DndCoreEngineService } from '../../services/dnd-core-engine.service';
 
             @if (state()?.hitTier !== 'critical') {
               <!-- Parsing Display -->
-              <div class="bg-stone-800 p-4 rounded border border-stone-700 text-center space-y-2">
-                <p class="text-sm text-stone-400">Role os dados físicos na mesa:</p>
+              <div class="bg-stone-800 p-6 rounded border border-stone-700 text-center space-y-4 shadow-inner">
+                <p class="text-base text-stone-300 font-bold">Role os dados físicos na mesa:</p>
                 
-                <div class="flex justify-center items-end gap-2 my-2">
+                <div class="flex justify-center items-end gap-3 my-4">
                   @if (parsedDamage().diceType) {
                     <div class="flex flex-col items-center">
-                      <span class="text-[10px] text-stone-500 uppercase font-bold">Quant.</span>
-                      <span class="text-2xl font-bold text-stone-200">
+                      <span class="text-xs text-stone-500 uppercase font-black tracking-widest">Quant.</span>
+                      <span class="text-4xl font-black text-stone-100">
                         {{ parsedDamage().diceCount }}
                       </span>
                     </div>
-                    <span class="text-xl font-bold text-stone-600 mb-1">x</span>
+                    <span class="text-2xl font-black text-stone-600 mb-2">x</span>
                     <div class="flex flex-col items-center">
-                      <span class="text-[10px] text-stone-500 uppercase font-bold">Dado</span>
-                      <span class="text-2xl font-bold text-amber-500">{{ parsedDamage().diceType }}</span>
+                      <span class="text-xs text-stone-500 uppercase font-black tracking-widest">Dado</span>
+                      <span class="text-4xl font-black text-amber-500">{{ parsedDamage().diceType }}</span>
                     </div>
                   } @else {
                     <div class="flex flex-col items-center">
-                      <span class="text-[10px] text-stone-500 uppercase font-bold">Dano Fixo</span>
-                      <span class="text-2xl font-bold text-amber-500">{{ parsedDamage().modifier }}</span>
+                      <span class="text-xs text-stone-500 uppercase font-black tracking-widest">Dano Fixo</span>
+                      <span class="text-4xl font-black text-amber-500">{{ parsedDamage().modifier }}</span>
                     </div>
                   }
                   
                   @if (parsedDamage().modifier !== 0 && parsedDamage().diceType) {
-                    <span class="text-xl font-bold text-stone-600 mb-1">
+                    <span class="text-2xl font-black text-stone-600 mb-2">
                       {{ parsedDamage().modifier > 0 ? '+' : '-' }}
                     </span>
                     <div class="flex flex-col items-center">
-                      <span class="text-[10px] text-stone-500 uppercase font-bold">Modificador</span>
-                      <span class="text-2xl font-bold text-stone-300">{{ Math.abs(parsedDamage().modifier) }}</span>
+                      <span class="text-xs text-stone-500 uppercase font-black tracking-widest">Modif.</span>
+                      <span class="text-4xl font-black text-stone-200">{{ Math.abs(parsedDamage().modifier) }}</span>
                     </div>
                   }
                 </div>
 
-                <p class="text-xs text-stone-500 mt-2 font-mono bg-stone-900/50 p-1 rounded">
-                  Dano Base: "{{ state()?.ability?.damage }}"
+                <p class="text-sm text-stone-500 mt-2 font-mono bg-stone-900/80 p-2 rounded border border-stone-700/50">
+                  Dano na Arma: <span class="text-stone-300 font-bold">"{{ state()?.ability?.damage }}"</span>
                 </p>
               </div>
 
               <!-- Input Result -->
-              <div class="space-y-3 pt-2 flex flex-col items-center">
-                <label class="text-xs font-bold text-stone-400 uppercase tracking-widest block text-center">
-                  Insira a soma dos dados obtidos
+              <div class="space-y-4 pt-2 flex flex-col items-center">
+                <label for="manualRollInput" class="text-sm font-black text-stone-400 uppercase tracking-[0.2em] block text-center">
+                  Soma Total dos Dados
                 </label>
-                <div class="w-1/2">
-                  <input type="number" [(ngModel)]="manualRoll" 
-                         class="w-full bg-stone-800 border rounded px-3 py-2 text-center font-mono font-bold text-lg focus:outline-none"
-                         placeholder="Valor"
+                <div class="w-2/3">
+                  <input id="manualRollInput" type="number" [(ngModel)]="manualRoll" 
+                         class="w-full bg-stone-950 border-2 rounded-lg px-4 py-4 text-center font-mono font-black text-3xl focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                         placeholder="?"
                          [class.border-red-500]="errorMessage()"
-                         [class.border-stone-600]="!errorMessage()"
-                         [class.focus:border-red-500]="!errorMessage()"
+                         [class.border-stone-700]="!errorMessage()"
+                         [class.focus:border-amber-500]="!errorMessage()"
                          [attr.min]="minPossibleRoll()"
                          [attr.max]="maxPossibleRoll()"
                          (keyup.enter)="applyDamage()">
                 </div>
                 @if (errorMessage()) {
-                  <p class="text-xs text-red-500 font-bold text-center bg-red-500/10 py-1 px-4 rounded">
+                  <p class="text-xs text-red-500 font-bold text-center bg-red-500/10 py-2 px-6 rounded-full border border-red-500/30">
                     {{ errorMessage() }}
                   </p>
                 }
@@ -139,9 +141,9 @@ import { DndCoreEngineService } from '../../services/dnd-core-engine.service';
               </div>
             }
             
-            <div class="flex justify-between items-center bg-stone-900 p-3 rounded border border-stone-700">
-               <span class="text-sm font-bold text-stone-400 uppercase">Dano Total Resultante</span>
-               <span class="text-2xl font-mono font-bold text-white">{{ calculatedTotal() }}</span>
+            <div class="flex justify-between items-center bg-stone-950 p-5 rounded-lg border border-stone-700 shadow-xl">
+               <span class="text-base font-black text-stone-500 uppercase tracking-widest">Total Resultante</span>
+               <span class="text-4xl font-mono font-black text-amber-500">{{ calculatedTotal() }}</span>
             </div>
 
             <!-- Applicator -->

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { CombatService } from '../../services/combat.service';
+import { Ability } from '../../models/ability';
 import { DndCoreEngineService, ActionResult } from '../../services/dnd-core-engine.service';
 
 interface TestOption {
@@ -18,16 +19,16 @@ interface TestOption {
   imports: [CommonModule, MatIconModule, FormsModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="flex flex-col h-full bg-stone-900 text-stone-300 overflow-y-auto custom-scrollbar">
+    <div class="flex flex-col h-full bg-stone-900 text-stone-300">
       
       @if (!selectedToken()) {
-        <div class="p-4 text-center text-stone-500 italic border-b border-stone-800">
-          Selecione um token no mapa para realizar testes.
+        <div class="p-2 text-center text-xs text-stone-500 italic border-b border-stone-800">
+          Selecione um token no mapa.
         </div>
       } @else {
-        <div class="p-4 border-b border-stone-800 bg-stone-800/50 sticky top-0 z-10 backdrop-blur-sm">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-full border-2 border-amber-500 overflow-hidden bg-stone-800 flex items-center justify-center">
+        <div class="p-2 border-b border-stone-800 bg-stone-800/50 sticky top-0 z-10 backdrop-blur-sm">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-full border border-amber-500 overflow-hidden bg-stone-800 flex items-center justify-center">
               @if (selectedToken()?.imageUrl) {
                 <img [src]="selectedToken()?.imageUrl" alt="Token" class="w-full h-full object-cover" referrerpolicy="no-referrer">
               } @else {
@@ -35,41 +36,41 @@ interface TestOption {
               }
             </div>
             <div>
-              <h3 class="font-bold text-amber-500 leading-tight">{{ selectedToken()?.name }}</h3>
-              <p class="text-xs text-stone-400">Menu de Ações</p>
+              <h3 class="font-bold text-amber-500 leading-tight text-sm">{{ selectedToken()?.name }}</h3>
+              <p class="text-[10px] text-stone-400 font-mono uppercase tracking-tighter">Ações & Testes</p>
             </div>
           </div>
         </div>
 
-        <!-- Accordion Categories -->
-        <div class="flex-1 p-2 space-y-2">
+        <!-- Scrollable Accordion Categories -->
+        <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2 max-h-[50vh]">
           
           <!-- Habilidades / Ações -->
           @if (selectedToken()?.abilities?.length) {
             <div class="border border-stone-700 rounded bg-stone-800 overflow-hidden">
-              <button class="w-full px-3 py-2 flex items-center justify-between text-sm font-bold text-stone-300 hover:bg-stone-700 transition-colors"
+              <button class="w-full px-2 py-1.5 flex items-center justify-between text-xs font-bold text-stone-300 hover:bg-stone-700 transition-colors"
                       (click)="toggleCategory('abilities')">
                 <div class="flex items-center gap-2">
-                  <mat-icon class="text-amber-500" style="font-size: 18px; width: 18px; height: 18px;">local_fire_department</mat-icon>
+                  <mat-icon class="text-amber-500" style="font-size: 16px; width: 16px; height: 16px;">local_fire_department</mat-icon>
                   Ações e Magias
                 </div>
-                <mat-icon style="font-size: 18px; width: 18px; height: 18px;">
+                <mat-icon style="font-size: 16px; width: 16px; height: 16px;">
                   {{ expandedCategory() === 'abilities' ? 'expand_less' : 'expand_more' }}
                 </mat-icon>
               </button>
               
               @if (expandedCategory() === 'abilities') {
-                <div class="p-2 bg-stone-900/50 flex flex-col gap-1">
+                <div class="p-1 bg-stone-900/50 flex flex-col gap-1">
                   @for (ability of selectedToken()?.abilities; track ability.id) {
-                    <button class="text-left px-3 py-2 rounded text-xs hover:bg-amber-900/30 hover:text-amber-400 transition-colors border border-stone-700 hover:border-amber-500/50 flex items-center justify-between gap-2"
+                    <button class="text-left px-2 py-1.5 rounded text-[11px] hover:bg-amber-900/30 hover:text-amber-400 transition-colors border border-stone-700 hover:border-amber-500/50 flex items-center justify-between gap-2 shadow-sm"
                             (click)="useAbility(ability)">
                       <div class="flex items-center gap-2">
-                        <mat-icon style="font-size: 16px; width: 16px; height: 16px;" class="opacity-70" [ngClass]="{'text-blue-400': ability.category === 'spell'}">
+                        <mat-icon style="font-size: 14px; width: 14px; height: 14px;" class="opacity-70" [ngClass]="{'text-blue-400': ability.category === 'spell'}">
                           {{ ability.category === 'spell' ? 'auto_fix_high' : 'colorize' }}
                         </mat-icon>
                         <span class="font-bold">{{ ability.name }}</span>
                       </div>
-                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;" class="text-stone-500">my_location</mat-icon>
+                      <mat-icon style="font-size: 12px; width: 12px; height: 12px;" class="text-stone-500">my_location</mat-icon>
                     </button>
                   }
                 </div>
@@ -79,26 +80,26 @@ interface TestOption {
 
           <!-- Atributos -->
           <div class="border border-stone-700 rounded bg-stone-800 overflow-hidden">
-            <button class="w-full px-3 py-2 flex items-center justify-between text-sm font-bold text-stone-300 hover:bg-stone-700 transition-colors"
+            <button class="w-full px-2 py-1.5 flex items-center justify-between text-xs font-bold text-stone-300 hover:bg-stone-700 transition-colors"
                     (click)="toggleCategory('attributes')">
               <div class="flex items-center gap-2">
-                <mat-icon class="text-amber-500" style="font-size: 18px; width: 18px; height: 18px;">fitness_center</mat-icon>
-                Testes de Atributo
+                <mat-icon class="text-amber-500" style="font-size: 16px; width: 16px; height: 16px;">fitness_center</mat-icon>
+                Atributos
               </div>
-              <mat-icon style="font-size: 18px; width: 18px; height: 18px;">
+              <mat-icon style="font-size: 16px; width: 16px; height: 16px;">
                 {{ expandedCategory() === 'attributes' ? 'expand_less' : 'expand_more' }}
               </mat-icon>
             </button>
             
             @if (expandedCategory() === 'attributes') {
-              <div class="p-2 bg-stone-900/50 grid grid-cols-2 gap-1">
+              <div class="p-1 bg-stone-900/50 grid grid-cols-2 gap-1">
                 @for (attr of attributes; track attr.id) {
-                  <button class="text-left px-2 py-1.5 rounded text-xs hover:bg-amber-900/30 hover:text-amber-400 transition-colors border border-transparent hover:border-amber-500/30 flex items-center gap-1"
+                  <button class="text-left px-2 py-1 rounded text-[10px] hover:bg-amber-900/30 hover:text-amber-400 transition-colors border border-transparent hover:border-amber-500/30 flex items-center gap-1"
                           [class.bg-amber-900/50]="selectedTest()?.id === attr.id"
                           [class.border-amber-500]="selectedTest()?.id === attr.id"
                           [class.text-amber-400]="selectedTest()?.id === attr.id"
                           (click)="selectTest(attr, 'attribute')">
-                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;" class="opacity-70">{{ attr.icon }}</mat-icon>
+                    <mat-icon style="font-size: 12px; width: 12px; height: 12px;" class="opacity-70">{{ attr.icon }}</mat-icon>
                     {{ attr.name }}
                   </button>
                 }
@@ -108,26 +109,26 @@ interface TestOption {
 
           <!-- Perícias -->
           <div class="border border-stone-700 rounded bg-stone-800 overflow-hidden">
-            <button class="w-full px-3 py-2 flex items-center justify-between text-sm font-bold text-stone-300 hover:bg-stone-700 transition-colors"
+            <button class="w-full px-2 py-1.5 flex items-center justify-between text-xs font-bold text-stone-300 hover:bg-stone-700 transition-colors"
                     (click)="toggleCategory('skills')">
               <div class="flex items-center gap-2">
-                <mat-icon class="text-amber-500" style="font-size: 18px; width: 18px; height: 18px;">psychology</mat-icon>
-                Perícias (Skills)
+                <mat-icon class="text-amber-500" style="font-size: 16px; width: 16px; height: 16px;">psychology</mat-icon>
+                Perícias
               </div>
-              <mat-icon style="font-size: 18px; width: 18px; height: 18px;">
+              <mat-icon style="font-size: 16px; width: 16px; height: 16px;">
                 {{ expandedCategory() === 'skills' ? 'expand_less' : 'expand_more' }}
               </mat-icon>
             </button>
             
             @if (expandedCategory() === 'skills') {
-              <div class="p-2 bg-stone-900/50 grid grid-cols-2 gap-1">
+              <div class="p-1 bg-stone-900/50 grid grid-cols-2 gap-1">
                 @for (skill of skills; track skill.id) {
-                  <button class="text-left px-2 py-1.5 rounded text-xs hover:bg-amber-900/30 hover:text-amber-400 transition-colors border border-transparent hover:border-amber-500/30 flex items-center gap-1"
+                  <button class="text-left px-2 py-1 rounded text-[10px] hover:bg-amber-900/30 hover:text-amber-400 transition-colors border border-transparent hover:border-amber-500/30 flex items-center gap-1 shadow-sm"
                           [class.bg-amber-900/50]="selectedTest()?.id === skill.id"
                           [class.border-amber-500]="selectedTest()?.id === skill.id"
                           [class.text-amber-400]="selectedTest()?.id === skill.id"
                           (click)="selectTest(skill, 'skill')">
-                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;" class="opacity-70">{{ skill.icon }}</mat-icon>
+                    <mat-icon style="font-size: 12px; width: 12px; height: 12px;" class="opacity-70">{{ skill.icon }}</mat-icon>
                     <span class="truncate" [title]="skill.name">{{ skill.name }}</span>
                   </button>
                 }
@@ -137,26 +138,26 @@ interface TestOption {
 
           <!-- Salvaguardas -->
           <div class="border border-stone-700 rounded bg-stone-800 overflow-hidden">
-            <button class="w-full px-3 py-2 flex items-center justify-between text-sm font-bold text-stone-300 hover:bg-stone-700 transition-colors"
+            <button class="w-full px-2 py-1.5 flex items-center justify-between text-xs font-bold text-stone-300 hover:bg-stone-700 transition-colors"
                     (click)="toggleCategory('saves')">
               <div class="flex items-center gap-2">
-                <mat-icon class="text-amber-500" style="font-size: 18px; width: 18px; height: 18px;">security</mat-icon>
+                <mat-icon class="text-amber-500" style="font-size: 16px; width: 16px; height: 16px;">security</mat-icon>
                 Salvaguardas
               </div>
-              <mat-icon style="font-size: 18px; width: 18px; height: 18px;">
+              <mat-icon style="font-size: 16px; width: 16px; height: 16px;">
                 {{ expandedCategory() === 'saves' ? 'expand_less' : 'expand_more' }}
               </mat-icon>
             </button>
             
             @if (expandedCategory() === 'saves') {
-              <div class="p-2 bg-stone-900/50 grid grid-cols-2 gap-1">
+              <div class="p-1 bg-stone-900/50 grid grid-cols-2 gap-1">
                 @for (save of attributes; track save.id) {
-                  <button class="text-left px-2 py-1.5 rounded text-xs hover:bg-amber-900/30 hover:text-amber-400 transition-colors border border-transparent hover:border-amber-500/30 flex items-center gap-1"
+                  <button class="text-left px-2 py-1 rounded text-[10px] hover:bg-amber-900/30 hover:text-amber-400 transition-colors border border-transparent hover:border-amber-500/30 flex items-center gap-1 shadow-sm"
                           [class.bg-amber-900/50]="selectedTest()?.id === 'save_' + save.id"
                           [class.border-amber-500]="selectedTest()?.id === 'save_' + save.id"
                           [class.text-amber-400]="selectedTest()?.id === 'save_' + save.id"
                           (click)="selectTest({id: 'save_' + save.id, name: save.name, attr: save.attr, icon: save.icon}, 'save')">
-                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;" class="opacity-70">{{ save.icon }}</mat-icon>
+                    <mat-icon style="font-size: 12px; width: 12px; height: 12px;" class="opacity-70">{{ save.icon }}</mat-icon>
                     {{ save.name }}
                   </button>
                 }
@@ -168,80 +169,80 @@ interface TestOption {
 
         <!-- Configuration & Roll Area -->
         @if (selectedTest()) {
-          <div class="p-4 border-t border-stone-800 bg-stone-900 sticky bottom-0 z-10 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.5)]">
-            <div class="flex items-center justify-between mb-3">
-              <h4 class="font-bold text-amber-500 flex items-center gap-2">
-                <mat-icon style="font-size: 18px; width: 18px; height: 18px;">{{ selectedTest()?.icon }}</mat-icon>
+          <div class="p-3 border-t border-stone-800 bg-stone-900 sticky bottom-0 z-10 shadow-[0_-15px_20px_-3px_rgba(0,0,0,0.6)]">
+            <div class="flex items-center justify-between mb-2">
+              <h4 class="font-bold text-amber-500 flex items-center gap-2 text-xs">
+                <mat-icon style="font-size: 14px; width: 14px; height: 14px;">{{ selectedTest()?.icon }}</mat-icon>
                 {{ selectedTest()?.name }}
               </h4>
-              <span class="text-[10px] uppercase text-stone-500 bg-stone-800 px-2 py-0.5 rounded border border-stone-700">
+              <span class="text-[10px] uppercase text-stone-500 bg-stone-800 px-1 py-0.5 rounded border border-stone-700 font-bold">
                 {{ testType() === 'attribute' ? 'Atributo' : testType() === 'skill' ? 'Perícia' : 'Salvaguarda' }}
               </span>
             </div>
 
-            <div class="grid grid-cols-1 gap-3 mb-4">
+            <div class="grid grid-cols-1 gap-2 mb-3">
               <div class="flex flex-col gap-1">
-                <label for="dcInput" class="text-[10px] uppercase text-stone-500 font-bold">Dificuldade (CD)</label>
-                <input id="dcInput" type="number" [(ngModel)]="dc" class="bg-stone-800 border border-stone-700 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-amber-500 text-center font-mono font-bold">
+                <label for="dcInput" class="text-[10px] uppercase text-stone-500 font-bold tracking-wider">CD</label>
+                <input id="dcInput" type="number" [(ngModel)]="dc" class="bg-stone-800 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500 text-center font-mono font-bold">
               </div>
             </div>
 
             @if (!isManualRolling()) {
-              <button (click)="startManualRoll()" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-stone-900 font-bold rounded shadow-lg transition-colors flex items-center justify-center gap-2">
-                <mat-icon style="font-size: 18px; width: 18px; height: 18px;">casino</mat-icon>
-                ROLAR DADO
+              <button (click)="startManualRoll()" class="w-full py-2 bg-amber-600 hover:bg-amber-500 text-stone-900 font-bold rounded shadow-lg transition-colors flex items-center justify-center gap-2 text-xs active:scale-95 duration-75">
+                <mat-icon style="font-size: 16px; width: 16px; height: 16px;">casino</mat-icon>
+                ROLAR
               </button>
             } @else {
-              <div class="bg-stone-800 border border-stone-700 rounded p-3 animate-in fade-in slide-in-from-bottom-2">
-                <label for="manualD20Roll" class="block text-xs font-bold text-amber-500 mb-2 text-center">Digite o valor do d20</label>
+              <div class="bg-stone-800 border border-stone-700 rounded p-2 animate-in fade-in slide-in-from-bottom-2 shadow-inner">
+                <label for="manualD20Roll" class="block text-[10px] font-bold text-amber-500 mb-1.5 text-center uppercase tracking-wide">Valor d20</label>
                 <div class="flex gap-2">
                   <input id="manualD20Roll" #manualInput type="number" 
                          [ngModel]="manualRollValue()" 
                          (ngModelChange)="manualRollValue.set($event)"
-                         class="flex-1 bg-stone-900 border border-stone-600 rounded px-3 py-2 text-center font-mono font-bold text-lg focus:outline-none focus:border-amber-500"
-                         placeholder="1 a 20"
+                         class="flex-1 bg-stone-900 border border-stone-600 rounded px-2 py-1.5 text-center font-mono font-bold text-base focus:outline-none focus:border-amber-500"
+                         placeholder="?"
                          (keyup.enter)="confirmRoll()">
-                  <button (click)="confirmRoll()" class="bg-green-600 hover:bg-green-500 text-white px-4 rounded font-bold transition-colors">
+                  <button (click)="confirmRoll()" class="bg-green-600 hover:bg-green-500 text-white px-3 rounded font-bold transition-colors shadow-md text-xs">
                     OK
                   </button>
-                  <button (click)="cancelManualRoll()" class="bg-stone-700 hover:bg-stone-600 text-white px-3 rounded transition-colors">
-                    <mat-icon style="font-size: 18px; width: 18px; height: 18px;">close</mat-icon>
+                  <button (click)="cancelManualRoll()" class="bg-stone-700 hover:bg-stone-600 text-white px-2 rounded transition-colors shadow-md">
+                    <mat-icon style="font-size: 16px; width: 16px; height: 16px;">close</mat-icon>
                   </button>
                 </div>
                 @if (rollError()) {
-                  <p class="text-red-400 text-[10px] mt-2 text-center">{{ rollError() }}</p>
+                  <p class="text-red-400 text-[10px] mt-2 text-center font-bold">{{ rollError() }}</p>
                 }
               </div>
             }
 
             <!-- Result Area -->
             @if (lastResult()) {
-              <div class="mt-4 p-3 rounded border animate-in fade-in slide-in-from-bottom-2 duration-300"
-                   [class.bg-green-900/20]="lastResult()?.success"
+              <div class="mt-3 p-2 rounded border animate-in fade-in zoom-in duration-300 shadow-lg"
+                   [class.bg-green-900/30]="lastResult()?.success"
                    [class.border-green-500/50]="lastResult()?.success"
-                   [class.bg-red-900/20]="!lastResult()?.success"
+                   [class.bg-red-900/30]="!lastResult()?.success"
                    [class.border-red-500/50]="!lastResult()?.success">
                 
                 <div class="flex items-center justify-between mb-1">
-                  <span class="font-bold text-lg" 
+                  <span class="font-bold text-xs tracking-tighter" 
                         [class.text-green-400]="lastResult()?.success"
                         [class.text-red-400]="!lastResult()?.success">
                     {{ lastResult()?.success ? 'SUCESSO!' : 'FALHA...' }}
                   </span>
-                  <span class="font-mono font-bold text-xl text-stone-200">{{ lastResult()?.roll?.total }}</span>
+                  <span class="font-mono font-bold text-lg text-stone-100">{{ lastResult()?.roll?.total }}</span>
                 </div>
                 
-                <div class="text-xs text-stone-400 font-mono break-words leading-tight">
+                <div class="text-[10px] text-stone-400 font-mono break-words leading-tight bg-black/20 p-1.5 rounded">
                   {{ lastResult()?.roll?.log }} vs CD {{ lastResult()?.dc }}
                 </div>
                 
                 @if (lastResult()?.roll?.isCritical) {
-                  <div class="mt-1 text-[10px] font-bold text-amber-400 uppercase tracking-widest text-center">
-                    Sucesso Crítico!
+                  <div class="mt-1 text-[9px] font-black text-amber-400 uppercase tracking-widest text-center">
+                    Crítico!
                   </div>
                 }
                 @if (lastResult()?.roll?.isCriticalFail) {
-                  <div class="mt-1 text-[10px] font-bold text-red-500 uppercase tracking-widest text-center">
+                  <div class="mt-1 text-[9px] font-black text-red-500 uppercase tracking-widest text-center">
                     Falha Crítica!
                   </div>
                 }
@@ -325,7 +326,7 @@ export class ActionMenuComponent {
     this.expandedCategory.set(this.expandedCategory() === cat ? null : cat);
   }
 
-  useAbility(ability: any) {
+  useAbility(ability: Ability) {
     const token = this.selectedToken();
     if (!token) return;
     this.combat.startPreview(ability, token);
