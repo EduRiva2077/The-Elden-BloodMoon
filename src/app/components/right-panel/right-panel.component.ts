@@ -159,11 +159,48 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
               </div>
 
               <!-- Inventory Section -->
-              <div class="bg-stone-800 rounded border border-stone-700 p-3 shadow-md mb-4">
+              <div class="mb-4">
                 <div class="flex justify-between items-center mb-2">
                   <h4 class="text-xs font-bold text-amber-500 uppercase flex items-center gap-1">
                     <mat-icon style="font-size: 14px; width: 14px; height: 14px;">inventory_2</mat-icon>
-                    Mochila & Itens
+                    Itens Coletados
+                  </h4>
+                </div>
+                
+                @if (selectedToken()?.sheet?.inventory?.length) {
+                  <div class="space-y-3">
+                    @for (item of selectedToken()?.sheet?.inventory; track item.name) {
+                      <div class="bg-stone-800 rounded border border-stone-700 overflow-hidden shadow-md">
+                        <div class="p-2 border-b border-stone-700 flex justify-between items-center bg-stone-800/50">
+                          <div class="flex items-center gap-2">
+                            <span class="font-bold text-amber-500 text-sm">{{ item.name }}</span>
+                          </div>
+                          @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
+                            <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="removeInventoryItem(item.name)" title="Remover item">
+                              <mat-icon style="font-size: 14px; width: 14px; height: 14px;">delete</mat-icon>
+                            </button>
+                          }
+                        </div>
+                        <div class="p-2 text-xs space-y-2">
+                          <div class="flex gap-2 font-mono flex-wrap">
+                            <span class="bg-stone-900 px-2 py-1 rounded border border-stone-700 text-stone-300">Qtd: {{ item.quantity }}</span>
+                            <span class="bg-stone-900 px-2 py-1 rounded border border-stone-700 text-stone-300">Peso: {{ item.weight }}kg</span>
+                          </div>
+                        </div>
+                      </div>
+                    }
+                  </div>
+                } @else {
+                  <p class="text-[10px] text-stone-500 italic text-center py-4 bg-stone-900 rounded border border-stone-800">Nenhum item coletado.</p>
+                }
+              </div>
+
+              <!-- Notes Backpack Section -->
+              <div class="bg-stone-800 rounded border border-stone-700 p-3 shadow-md mb-4">
+                <div class="flex justify-between items-center mb-2">
+                  <h4 class="text-xs font-bold text-amber-500 uppercase flex items-center gap-1">
+                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">backpack</mat-icon>
+                    Anotações da Mochila
                   </h4>
                   <div class="flex gap-2">
                     @if (isEditingInventory()) {
@@ -185,7 +222,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                 } @else {
                   <div class="bg-stone-900 p-2 rounded border border-stone-700 min-h-[60px] text-xs text-stone-300 whitespace-pre-wrap flex items-start gap-2">
                     <mat-icon class="text-stone-500 mt-0.5" style="font-size: 12px; width: 12px; height: 12px;">description</mat-icon>
-                    {{ selectedToken()?.sheet?.backpack || 'Inventário vazio.' }}
+                    {{ selectedToken()?.sheet?.backpack || 'Sem anotações.' }}
                   </div>
                 }
               </div>
@@ -1657,6 +1694,16 @@ export class RightPanelComponent {
 
     const newAbilities = (token.abilities || []).filter(a => a.id !== id);
     this.combat.updateToken(token.id, { abilities: newAbilities });
+  }
+
+  removeInventoryItem(itemName: string) {
+    const token = this.selectedToken();
+    if (!token || !token.sheet || !token.sheet.inventory) return;
+
+    const updatedSheet = { ...token.sheet };
+    updatedSheet.inventory = updatedSheet.inventory!.filter(i => i.name !== itemName);
+
+    this.combat.updateToken(token.id, { sheet: updatedSheet });
   }
 
   isDraggingImage = signal(false);

@@ -1013,6 +1013,16 @@ export class GridComponent {
     event.source.setFreeDragPosition({ x: targetPx, y: targetPy });
     
     this.syncToFirestore(token.id, newGridX, newGridY);
+
+    // Collision Detection for Loot
+    if (token.type === 'player' || token.type === 'npc') {
+      const collidedItem = this.combat.itemTokens().find(i => i.x === newGridX && i.y === newGridY);
+      if (collidedItem) {
+        // Select the item visually and trigger the confirmation modal
+        this.combat.selectedItemToken.set(collidedItem);
+        this.combat.pendingLoot.set({ playerTokenId: token.id, itemTokenId: collidedItem.id });
+      }
+    }
   }
   
   private syncToFirestore(tokenId: string, x: number, y: number) {

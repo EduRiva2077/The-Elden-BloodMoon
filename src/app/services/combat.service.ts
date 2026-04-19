@@ -88,6 +88,7 @@ export class CombatService {
   // Estado de Seleção e Visual (Novos)
   selectedTokenId = signal<string | null>(null);
   selectedItemToken = signal<ItemToken | null>(null);
+  pendingLoot = signal<{ playerTokenId: string, itemTokenId: string } | null>(null);
   itemTokens = signal<ItemToken[]>([]);
   mapBackgroundImage = signal<string | null>(null); // URL da imagem de fundo
   showGrid = signal<boolean>(false); // Toggle grid visibility
@@ -471,8 +472,8 @@ export class CombatService {
       return;
     }
 
-    if (player.type !== 'player') {
-      this.addNotification('Apenas jogadores podem coletar itens.', 'error');
+    if (player.type === 'item') {
+      this.addNotification('Itens não podem coletar itens.', 'error');
       return;
     }
 
