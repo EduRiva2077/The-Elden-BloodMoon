@@ -82,19 +82,73 @@ import { Ability } from '../../models/ability';
             </div>
             <!-- Area Preview SVG -->
             @if (previewAbility()) {
-              <svg class="absolute inset-0 w-full h-full pointer-events-none z-5" [attr.viewBox]="'0 0 ' + mapWidth() + ' ' + mapHeight()">
+              <svg class="absolute inset-0 w-full h-full pointer-events-none z-5 animate-pulse" [attr.viewBox]="'0 0 ' + mapWidth() + ' ' + mapHeight()">
+                <defs>
+                  <!-- Lightning Filter -->
+                  <filter id="lightningFilter" x="-20%" y="-20%" width="140%" height="140%">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="3" result="noise" />
+                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="15" xChannelSelector="R" yChannelSelector="G" />
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+
+                  <!-- Fire Filter -->
+                  <filter id="fireFilter" x="-20%" y="-20%" width="140%" height="140%">
+                    <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="2" result="noise" />
+                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="8" xChannelSelector="R" yChannelSelector="G" />
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+
+                  <!-- Acid Filter -->
+                  <filter id="acidFilter" x="-20%" y="-20%" width="140%" height="140%">
+                    <feTurbulence type="turbulence" baseFrequency="0.08" numOctaves="2" result="noise" />
+                    <feDisplacementMap in="SourceGraphic" in2="noise" scale="10" xChannelSelector="R" yChannelSelector="G" />
+                  </filter>
+
+                  <!-- Cold Filter -->
+                  <filter id="coldFilter">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                  
+                  <!-- Basic Glow Filter -->
+                  <filter id="glowFilter">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+
                 <!-- Max Range Circle Visual -->
                 @if (previewAbility()?.range; as range) {
                   <circle 
                     [attr.cx]="(combat.previewOrigin()?.x || 0) * gridSize + gridSize / 2" 
                     [attr.cy]="(combat.previewOrigin()?.y || 0) * gridSize + gridSize / 2" 
                     [attr.r]="range * (gridSize / 1.5)" 
-                    fill="rgba(245, 158, 11, 0.03)" 
-                    stroke="rgba(245, 158, 11, 0.3)" 
+                    [attr.fill]="abilityVisuals().rangeFill" 
+                    [attr.stroke]="abilityVisuals().rangeStroke" 
                     stroke-width="1" 
                     stroke-dasharray="10,5" />
                 }
-                <path [attr.d]="areaPath()" fill="rgba(245, 158, 11, 0.4)" stroke="#f59e0b" stroke-width="2" />
+                <path 
+                  [attr.d]="areaPath()" 
+                  [attr.fill]="abilityVisuals().fill" 
+                  [attr.stroke]="abilityVisuals().stroke" 
+                  [attr.filter]="abilityVisuals().filter"
+                  stroke-width="2" 
+                  class="transition-colors duration-300" />
               </svg>
             }
 
@@ -328,7 +382,71 @@ export class GridComponent {
     return this.tokens().filter(t => this.isTokenInArea(t, ability, origin, target));
   });
 
+  abilityVisuals = computed(() => {
+    const ability = this.combat.previewAbility();
+    if (!ability) return { fill: 'rgba(245, 158, 11, 0.4)', stroke: '#f59e0b', filter: '', rangeFill: 'rgba(245, 158, 11, 0.03)', rangeStroke: 'rgba(245, 158, 11, 0.3)' };
 
+    const type = ability.damageType?.toLowerCase() || '';
+    
+    switch (type) {
+      case 'fire': return { 
+        fill: 'rgba(239, 68, 68, 0.5)', 
+        stroke: '#ea580c', 
+        filter: 'url(#fireFilter)',
+        rangeFill: 'rgba(239, 68, 68, 0.03)', 
+        rangeStroke: 'rgba(239, 68, 68, 0.3)' 
+      };
+      case 'lightning': return { 
+        fill: 'rgba(56, 189, 248, 0.6)', 
+        stroke: '#bae6fd', 
+        filter: 'url(#lightningFilter)',
+        rangeFill: 'rgba(56, 189, 248, 0.03)', 
+        rangeStroke: 'rgba(56, 189, 248, 0.3)' 
+      };
+      case 'cold': return { 
+        fill: 'rgba(165, 243, 252, 0.4)', 
+        stroke: '#22d3ee', 
+        filter: 'url(#coldFilter)',
+        rangeFill: 'rgba(165, 243, 252, 0.03)', 
+        rangeStroke: 'rgba(34, 211, 238, 0.3)' 
+      };
+      case 'acid': return { 
+        fill: 'rgba(132, 204, 22, 0.5)', 
+        stroke: '#65a30d', 
+        filter: 'url(#acidFilter)',
+        rangeFill: 'rgba(132, 204, 22, 0.03)', 
+        rangeStroke: 'rgba(132, 204, 22, 0.3)' 
+      };
+      case 'poison': return {
+        fill: 'rgba(168, 85, 247, 0.5)', 
+        stroke: '#9333ea', 
+        filter: 'url(#acidFilter)',
+        rangeFill: 'rgba(168, 85, 247, 0.03)', 
+        rangeStroke: 'rgba(168, 85, 247, 0.3)' 
+      };
+      case 'necrotic': return {
+        fill: 'rgba(0, 0, 0, 0.6)', 
+        stroke: '#a855f7', 
+        filter: 'url(#glowFilter)',
+        rangeFill: 'rgba(0, 0, 0, 0.05)', 
+        rangeStroke: 'rgba(168, 85, 247, 0.3)' 
+      };
+      case 'radiant': return {
+        fill: 'rgba(253, 224, 71, 0.5)', 
+        stroke: '#fef08a', 
+        filter: 'url(#glowFilter)',
+        rangeFill: 'rgba(253, 224, 71, 0.03)', 
+        rangeStroke: 'rgba(253, 224, 71, 0.3)' 
+      };
+      default: return { 
+        fill: 'rgba(245, 158, 11, 0.4)', 
+        stroke: '#f59e0b', 
+        filter: '',
+        rangeFill: 'rgba(245, 158, 11, 0.03)', 
+        rangeStroke: 'rgba(245, 158, 11, 0.3)' 
+      };
+    }
+  });
 
   areaPath = computed(() => {
     const ability = this.combat.previewAbility();
