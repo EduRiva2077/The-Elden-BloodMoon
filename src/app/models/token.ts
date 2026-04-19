@@ -66,4 +66,5 @@ export interface Token {
   type?: 'player' | 'enemy' | 'npc' | 'boss' | 'item';
   abilities?: Ability[];
   sheet?: CharacterSheet;
+  initiative?: number;
 }

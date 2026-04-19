@@ -26,7 +26,7 @@ interface TestOption {
           Selecione um token no mapa.
         </div>
       } @else {
-        <div class="p-2 border-b border-stone-800 bg-stone-800/50 sticky top-0 z-10 backdrop-blur-sm">
+        <div class="shrink-0 p-2 border-b border-stone-800 bg-stone-800/50 sticky top-0 z-10 backdrop-blur-sm">
           <div class="flex items-center gap-2">
             <div class="w-8 h-8 rounded-full border border-amber-500 overflow-hidden bg-stone-800 flex items-center justify-center">
               @if (selectedToken()?.imageUrl) {
@@ -43,7 +43,7 @@ interface TestOption {
         </div>
 
         <!-- Scrollable Accordion Categories -->
-        <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2 max-h-[50vh]">
+        <div class="flex-1 overflow-y-auto min-h-0 custom-scrollbar p-2 space-y-2">
           
           <!-- Habilidades / Ações -->
           @if (selectedToken()?.abilities?.length) {

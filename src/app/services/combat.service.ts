@@ -149,6 +149,50 @@ export class CombatService {
     this.damageModalState.set(null);
   }
 
+  // Combat Tracker State
+  combatActive = signal<boolean>(false);
+  activeTurnIndex = signal<number>(0);
+  
+  initiativeOrder = computed(() => {
+    // Return tokens that are part of the initiative order, sorted descending
+    const order = this.tokens().filter(t => t.initiative !== undefined && t.type !== 'item');
+    return order.sort((a, b) => (b.initiative || 0) - (a.initiative || 0));
+  });
+  
+  startCombat() {
+    this.combatActive.set(true);
+    this.activeTurnIndex.set(0);
+  }
+  
+  endCombat() {
+    this.combatActive.set(false);
+    this.activeTurnIndex.set(0);
+    // Clear initiatives
+    const updatedTokens = this.tokens().map(t => ({...t, initiative: undefined}));
+    this.tokens.set(updatedTokens);
+  }
+  
+  setTokenInitiative(tokenId: string, value: number) {
+    this.updateToken(tokenId, { initiative: value });
+  }
+  
+  nextTurn() {
+    const currentList = this.initiativeOrder();
+    if (currentList.length === 0) return;
+    const newIdx = (this.activeTurnIndex() + 1) % currentList.length;
+    this.activeTurnIndex.set(newIdx);
+  }
+  
+  previousTurn() {
+    const currentList = this.initiativeOrder();
+    if (currentList.length === 0) return;
+    let newIdx = this.activeTurnIndex() - 1;
+    if (newIdx < 0) newIdx = currentList.length - 1;
+    this.activeTurnIndex.set(newIdx);
+  }
+
+  // --- End Combat Tracker State ---
+
   // Session Notes State
   storyContent = signal<string>('O grupo se aproxima do templo em ruínas de The <span style="color: #3b82f6; font-weight: bold;">Elden</span> <span style="color: #dc2626; font-weight: bold;">Blood</span><span style="color: #eab308; font-weight: bold;">Moon</span>. <br>Uma névoa espessa obscurece a entrada, e o cheiro de enxofre paira pesado no ar.');
   gmSecretContent = signal<string>('<strong>Segredo do Mestre:</strong> As estátuas perto da porta são na verdade Gárgulas esperando para emboscar.');

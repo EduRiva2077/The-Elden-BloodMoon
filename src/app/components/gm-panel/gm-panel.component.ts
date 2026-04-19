@@ -9,12 +9,15 @@ import { MatIconModule } from '@angular/material/icon';
   standalone: true,
   imports: [CommonModule, MatIconModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    'class': 'flex flex-col h-full w-80 bg-stone-900 border-r border-stone-800 text-stone-300 relative z-20 shadow-2xl shrink-0'
+  },
   template: `
-    <div class="w-80 h-full bg-stone-900 border-r border-stone-800 flex flex-col text-stone-300">
       <!-- Tabs -->
-      <div class="flex border-b border-stone-800 text-xs font-mono">
+      <div class="flex shrink-0 border-b border-stone-800 text-xs font-mono">
         <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="activeTab() === 'map'" [class.border-b-2]="activeTab() === 'map'" [class.border-amber-500]="activeTab() === 'map'" [class.bg-stone-800]="activeTab() === 'map'" (click)="activeTab.set('map')">Mapa</button>
         <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="activeTab() === 'tokens'" [class.border-b-2]="activeTab() === 'tokens'" [class.border-amber-500]="activeTab() === 'tokens'" [class.bg-stone-800]="activeTab() === 'tokens'" (click)="activeTab.set('tokens')">Tokens</button>
+        <button class="flex-1 py-3 transition-colors" [class.text-amber-500]="activeTab() === 'combat'" [class.border-b-2]="activeTab() === 'combat'" [class.border-amber-500]="activeTab() === 'combat'" [class.bg-stone-800]="activeTab() === 'combat'" (click)="activeTab.set('combat')">Combate</button>
       </div>
       
       <!-- Content Area -->
@@ -231,14 +234,84 @@ import { MatIconModule } from '@angular/material/icon';
 
           </div>
         }
+        
+        @if (activeTab() === 'combat') {
+          <div class="p-4 space-y-6">
+            <div class="space-y-4">
+              <div class="flex items-center justify-between border-b border-stone-700 pb-2">
+                <h3 class="font-bold text-amber-500 flex items-center gap-2">
+                  <mat-icon style="font-size: 18px; width: 18px; height: 18px;">swords</mat-icon>
+                  Rastreador de Combate
+                </h3>
+              </div>
+              
+              <div class="space-y-4">
+                @if (!combat.combatActive()) {
+                  <button class="w-full bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold py-2 px-4 rounded shadow transition-colors flex justify-center items-center gap-2"
+                          (click)="combat.startCombat()">
+                    <mat-icon style="font-size: 18px; width: 18px; height: 18px;">play_arrow</mat-icon>
+                    Iniciar Combate
+                  </button>
+                } @else {
+                  <div class="flex gap-2">
+                    <button class="flex-1 bg-stone-700 hover:bg-stone-600 text-white font-bold py-2 px-2 rounded shadow transition-colors text-xs flex justify-center items-center gap-1"
+                            (click)="combat.previousTurn()">
+                      <mat-icon style="font-size: 16px; width: 16px; height: 16px;">navigate_before</mat-icon> Anterior
+                    </button>
+                    <button class="flex-1 bg-amber-600 hover:bg-amber-500 text-stone-950 font-bold py-2 px-2 rounded shadow transition-colors text-xs flex justify-center items-center gap-1"
+                            (click)="combat.nextTurn()">
+                      Próximo <mat-icon style="font-size: 16px; width: 16px; height: 16px;">navigate_next</mat-icon>
+                    </button>
+                  </div>
+                  <button class="w-full bg-red-900/50 hover:bg-red-800 text-red-100 font-bold py-2 px-4 rounded border border-red-900 transition-colors flex justify-center items-center gap-2"
+                          (click)="combat.endCombat()">
+                    <mat-icon style="font-size: 18px; width: 18px; height: 18px;">stop</mat-icon>
+                    Encerrar Combate
+                  </button>
+                }
+              </div>
+
+              <!-- List of tokens to set initiative -->
+              <div class="pt-4 border-t border-stone-800">
+                <h4 class="text-xs font-bold text-stone-400 mb-3 uppercase tracking-wider">Definir Iniciativas</h4>
+                <div class="space-y-2 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
+                  @for (token of combat.tokens(); track token.id) {
+                    @if (token.type !== 'item') {
+                      <div class="flex items-center gap-2 bg-stone-800/50 p-2 rounded border border-stone-700">
+                        <div class="w-6 h-6 rounded-full border border-stone-600 overflow-hidden shrink-0 bg-stone-900">
+                           @if (token.imageUrl) {
+                             <img [src]="token.imageUrl" class="w-full h-full object-cover" alt="Miniatura">
+                           } @else {
+                             <div class="w-full h-full" [style.backgroundColor]="token.color"></div>
+                           }
+                        </div>
+                        <span class="flex-1 text-xs truncate max-w-[120px]" 
+                              [class.text-red-400]="token.type === 'enemy' || token.type === 'boss'"
+                              [class.text-blue-400]="token.type === 'npc'"
+                              [class.text-stone-200]="token.type === 'player'">
+                          {{ token.name }}
+                        </span>
+                        <input type="number" 
+                               [value]="token.initiative !== undefined ? token.initiative : ''"
+                               (change)="updateInitiative(token.id, $event)"
+                               placeholder="10"
+                               class="w-16 bg-stone-900 border border-stone-600 rounded px-1.5 py-1 text-xs text-center focus:outline-none focus:border-amber-500 font-mono text-amber-500">
+                      </div>
+                    }
+                  }
+                </div>
+              </div>
+
+            </div>
+          </div>
+        }
 
       </div>
-    </div>
   `
 })
 export class GmPanelComponent {
   combat = inject(CombatService);
-  activeTab = signal<'map' | 'tokens'>('map');
+  activeTab = signal<'map' | 'tokens' | 'combat'>('map');
   tokenToDelete = signal<string | null>(null);
 
   conditionCategories = [
@@ -357,6 +430,12 @@ export class GmPanelComponent {
     }
     
     this.combat.updateToken(id, { [field]: value });
+  }
+
+  updateInitiative(tokenId: string, event: Event) {
+    const input = event.target as HTMLInputElement;
+    const value = input.value ? parseInt(input.value, 10) : undefined;
+    this.combat.updateToken(tokenId, { initiative: value });
   }
 
   hideAllFog() {

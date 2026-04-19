@@ -15,10 +15,12 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
   standalone: true,
   imports: [CommonModule, MatIconModule, ReactiveFormsModule, FormsModule, ActionMenuComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    'class': 'flex flex-col h-full w-72 bg-stone-900 border-l border-stone-800 text-stone-300 relative z-20 shadow-2xl shrink-0'
+  },
   template: `
-    <div class="w-72 h-full bg-stone-900 border-l border-stone-800 flex flex-col text-stone-300 relative">
       <!-- Tabs -->
-      <div class="flex border-b border-stone-800 text-sm font-mono">
+      <div class="flex shrink-0 border-b border-stone-800 text-sm font-mono">
         @if (selectedToken()?.type !== 'item') {
           <button class="flex-1 py-4 transition-colors" [class.text-amber-500]="combat.rightPanelTab() === 'sheet'" [class.border-b-2]="combat.rightPanelTab() === 'sheet'" [class.border-amber-500]="combat.rightPanelTab() === 'sheet'" [class.bg-stone-800]="combat.rightPanelTab() === 'sheet'" (click)="combat.rightPanelTab.set('sheet')">Ficha</button>
         }
@@ -30,7 +32,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
       
       <!-- Inventory & Spells Tab -->
       @if (combat.rightPanelTab() === 'inventory') {
-        <div class="flex-1 overflow-auto p-4 space-y-4">
+        <div class="flex-1 overflow-y-auto min-h-0 custom-scrollbar p-4 space-y-4">
           @if (combat.previewAbility()) {
             <div class="bg-amber-900/30 border border-amber-500/50 rounded p-3 text-sm text-amber-500 flex items-center gap-2 mb-4">
               <mat-icon>info</mat-icon>
@@ -931,7 +933,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
       }
       <!-- Sheet Tab -->
       @if (combat.rightPanelTab() === 'sheet') {
-        <div class="flex-1 overflow-auto p-4 space-y-4">
+        <div class="flex-1 overflow-y-auto min-h-0 custom-scrollbar p-4 space-y-4">
           <!-- Token Image -->
           @if (selectedToken()?.imageUrl) {
               <div class="flex flex-col items-center mb-4">
@@ -1123,21 +1125,22 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                       </button>
                     }
                   </div>
-                <div class="grid grid-cols-2 gap-x-3 gap-y-2 mt-3 text-stone-400">
-                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">favorite</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">PV:</span> {{ sheet.hp }}/{{ sheet.maxHp }}</div>
-                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">auto_awesome</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">Magias:</span> {{ sheet.spellUses }}/{{ sheet.maxSpellUses }}</div>
-                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">school</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">Classe:</span> {{ sheet.class }}</div>
-                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">military_tech</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">Nível:</span> {{ sheet.level }}</div>
-                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">history</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">Antecedente:</span> {{ sheet.background }}</div>
-                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">person</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">Jogador:</span> {{ sheet.playerName }}</div>
-                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">groups</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">Raça:</span> {{ sheet.race }}</div>
-                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">balance</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">Tendência:</span> {{ sheet.alignment }}</div>
-                    <div class="flex items-center gap-2 text-sm"><mat-icon class="text-stone-500" style="font-size: 14px; width: 14px; height: 14px;">trending_up</mat-icon> <span class="text-stone-500 font-bold uppercase text-[10px]">XP:</span> {{ sheet.xp }}</div>
+                <div class="flex flex-col gap-1.5 mt-3 text-stone-400 bg-stone-900 border border-stone-800 rounded p-2 text-xs">
+                    <div class="flex items-center justify-between"><div class="flex items-center gap-1"><mat-icon class="text-stone-500 text-[14px] leading-none" style="width: 14px; height: 14px;">favorite</mat-icon><span class="text-stone-500 font-bold uppercase text-[10px]">PV</span></div> <span class="font-mono text-stone-300 font-bold">{{ sheet.hp }}/{{ sheet.maxHp }}</span></div>
+                    <div class="flex items-center justify-between"><div class="flex items-center gap-1"><mat-icon class="text-stone-500 text-[14px] leading-none" style="width: 14px; height: 14px;">auto_awesome</mat-icon><span class="text-stone-500 font-bold uppercase text-[10px]">Magias</span></div> <span class="font-mono text-stone-300">{{ sheet.spellUses }}/{{ sheet.maxSpellUses }}</span></div>
+                    <div class="border-t border-stone-800 my-0.5"></div>
+                    <div class="flex items-center justify-between"><div class="flex items-center gap-1"><mat-icon class="text-stone-500 text-[14px] leading-none" style="width: 14px; height: 14px;">school</mat-icon><span class="text-stone-500 font-bold uppercase text-[10px]">Classe</span></div> <span class="truncate text-stone-300 text-[11px] max-w-[100px] text-right" title="{{ sheet.class }}">{{ sheet.class }}</span></div>
+                    <div class="flex items-center justify-between"><div class="flex items-center gap-1"><mat-icon class="text-stone-500 text-[14px] leading-none" style="width: 14px; height: 14px;">military_tech</mat-icon><span class="text-stone-500 font-bold uppercase text-[10px]">Nível</span></div> <span class="text-stone-300 font-bold">{{ sheet.level }}</span></div>
+                    <div class="flex items-center justify-between"><div class="flex items-center gap-1"><mat-icon class="text-stone-500 text-[14px] leading-none" style="width: 14px; height: 14px;">history</mat-icon><span class="text-stone-500 font-bold uppercase text-[10px]">Antecedente</span></div> <span class="truncate text-stone-300 text-[11px] max-w-[100px] text-right" title="{{ sheet.background }}">{{ sheet.background }}</span></div>
+                    <div class="flex items-center justify-between"><div class="flex items-center gap-1"><mat-icon class="text-stone-500 text-[14px] leading-none" style="width: 14px; height: 14px;">person</mat-icon><span class="text-stone-500 font-bold uppercase text-[10px]">Jogador</span></div> <span class="truncate text-stone-300 text-[11px] max-w-[100px] text-right" title="{{ sheet.playerName }}">{{ sheet.playerName }}</span></div>
+                    <div class="flex items-center justify-between"><div class="flex items-center gap-1"><mat-icon class="text-stone-500 text-[14px] leading-none" style="width: 14px; height: 14px;">groups</mat-icon><span class="text-stone-500 font-bold uppercase text-[10px]">Raça</span></div> <span class="truncate text-stone-300 text-[11px] max-w-[100px] text-right" title="{{ sheet.race }}">{{ sheet.race }}</span></div>
+                    <div class="flex items-center justify-between"><div class="flex items-center gap-1"><mat-icon class="text-stone-500 text-[14px] leading-none" style="width: 14px; height: 14px;">balance</mat-icon><span class="text-stone-500 font-bold uppercase text-[10px]">Tendência</span></div> <span class="truncate text-stone-300 text-[11px] max-w-[100px] text-right" title="{{ sheet.alignment }}">{{ sheet.alignment }}</span></div>
+                    <div class="flex items-center justify-between"><div class="flex items-center gap-1"><mat-icon class="text-stone-500 text-[14px] leading-none" style="width: 14px; height: 14px;">trending_up</mat-icon><span class="text-stone-500 font-bold uppercase text-[10px]">XP</span></div> <span class="text-stone-300 font-mono">{{ sheet.xp }}</span></div>
                   </div>
                 </div>
 
                 <!-- Combat Stats -->
-                <div class="flex justify-between items-center bg-stone-900 p-4 rounded border border-stone-700 shadow-inner">
+                <div class="flex justify-between items-center bg-stone-900 p-3 rounded border border-stone-800 shadow-inner">
                   <div class="text-center flex flex-col items-center">
                     <div class="text-xs text-stone-500 uppercase font-bold flex items-center gap-1.5 tracking-tighter">
                       <mat-icon style="font-size: 14px; width: 14px; height: 14px;">security</mat-icon>
@@ -1162,66 +1165,66 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                 </div>
 
                 <!-- Attributes -->
-                <div class="grid grid-cols-3 gap-3">
-                  <div class="bg-stone-900 border border-stone-700 rounded p-3 text-center flex flex-col items-center shadow-sm">
-                    <div class="text-xs text-stone-500 uppercase font-black flex items-center gap-1">
-                      <mat-icon style="font-size: 12px; width: 12px; height: 12px;">fitness_center</mat-icon>
+                <div class="grid grid-cols-3 gap-2">
+                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm">
+                    <div class="text-[10px] text-stone-500 uppercase font-black flex items-center gap-1">
+                      <mat-icon style="font-size: 10px; width: 10px; height: 10px;">fitness_center</mat-icon>
                       FOR
                     </div>
-                    <div class="font-bold text-2xl">{{ sheet.str }}</div>
-                    <div class="text-xs text-stone-400 font-mono">{{ mathService.calculateModifier(sheet.str) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.str) }}</div>
+                    <div class="font-bold text-lg text-stone-200">{{ sheet.str }}</div>
+                    <div class="text-[10px] text-stone-400 font-mono">{{ mathService.calculateModifier(sheet.str) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.str) }}</div>
                   </div>
-                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center flex flex-col items-center">
+                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm">
                     <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
                       <mat-icon style="font-size: 10px; width: 10px; height: 10px;">directions_run</mat-icon>
                       DES
                     </div>
-                    <div class="font-bold text-lg">{{ sheet.dex }}</div>
-                    <div class="text-[10px] text-stone-400">{{ mathService.calculateModifier(sheet.dex) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.dex) }}</div>
+                    <div class="font-bold text-lg text-stone-200">{{ sheet.dex }}</div>
+                    <div class="text-[10px] text-stone-400 font-mono">{{ mathService.calculateModifier(sheet.dex) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.dex) }}</div>
                   </div>
-                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center flex flex-col items-center">
+                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm">
                     <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
                       <mat-icon style="font-size: 10px; width: 10px; height: 10px;">favorite</mat-icon>
                       CON
                     </div>
-                    <div class="font-bold text-lg">{{ sheet.con }}</div>
-                    <div class="text-[10px] text-stone-400">{{ mathService.calculateModifier(sheet.con) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.con) }}</div>
+                    <div class="font-bold text-lg text-stone-200">{{ sheet.con }}</div>
+                    <div class="text-[10px] text-stone-400 font-mono">{{ mathService.calculateModifier(sheet.con) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.con) }}</div>
                   </div>
-                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center flex flex-col items-center">
+                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm">
                     <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
                       <mat-icon style="font-size: 10px; width: 10px; height: 10px;">menu_book</mat-icon>
                       INT
                     </div>
-                    <div class="font-bold text-lg">{{ sheet.int }}</div>
-                    <div class="text-[10px] text-stone-400">{{ mathService.calculateModifier(sheet.int) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.int) }}</div>
+                    <div class="font-bold text-lg text-stone-200">{{ sheet.int }}</div>
+                    <div class="text-[10px] text-stone-400 font-mono">{{ mathService.calculateModifier(sheet.int) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.int) }}</div>
                   </div>
-                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center flex flex-col items-center">
+                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm">
                     <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
                       <mat-icon style="font-size: 10px; width: 10px; height: 10px;">visibility</mat-icon>
                       SAB
                     </div>
-                    <div class="font-bold text-lg">{{ sheet.wis }}</div>
-                    <div class="text-[10px] text-stone-400">{{ mathService.calculateModifier(sheet.wis) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.wis) }}</div>
+                    <div class="font-bold text-lg text-stone-200">{{ sheet.wis }}</div>
+                    <div class="text-[10px] text-stone-400 font-mono">{{ mathService.calculateModifier(sheet.wis) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.wis) }}</div>
                   </div>
-                  <div class="bg-stone-900 border border-stone-700 rounded p-2 text-center flex flex-col items-center">
+                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm">
                     <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
                       <mat-icon style="font-size: 10px; width: 10px; height: 10px;">record_voice_over</mat-icon>
                       CAR
                     </div>
-                    <div class="font-bold text-lg">{{ sheet.cha }}</div>
-                    <div class="text-[10px] text-stone-400">{{ mathService.calculateModifier(sheet.cha) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.cha) }}</div>
+                    <div class="font-bold text-lg text-stone-200">{{ sheet.cha }}</div>
+                    <div class="text-[10px] text-stone-400 font-mono">{{ mathService.calculateModifier(sheet.cha) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.cha) }}</div>
                   </div>
                 </div>
 
                 <!-- Other Stats -->
-                <div class="space-y-2">
-                  <div class="flex justify-between items-center bg-stone-900 px-2 py-1 rounded border border-stone-700">
-                    <span class="text-stone-500 font-bold">Bônus de Proficiência</span>
-                    <span class="font-bold text-amber-500">+{{ sheet.proficiencyBonus }}</span>
+                <div class="space-y-1.5 mt-3">
+                  <div class="flex justify-between items-center bg-stone-900/50 px-2 py-1.5 rounded border border-stone-800 text-xs">
+                    <span class="text-stone-500 font-bold uppercase tracking-tighter">Bônus de Proficiência</span>
+                    <span class="font-bold text-amber-500 font-mono">+{{ sheet.proficiencyBonus }}</span>
                   </div>
-                  <div class="flex justify-between items-center bg-stone-900 px-2 py-1 rounded border border-stone-700">
-                    <span class="text-stone-500 font-bold">Sabedoria Passiva (Percepção)</span>
-                    <span class="font-bold text-amber-500">{{ sheet.passivePerception }}</span>
+                  <div class="flex justify-between items-center bg-stone-900/50 px-2 py-1.5 rounded border border-stone-800 text-xs">
+                    <span class="text-stone-500 font-bold uppercase tracking-tighter">Percepção Passiva</span>
+                    <span class="font-bold text-amber-500 font-mono">{{ sheet.passivePerception }}</span>
                   </div>
                 </div>
 
@@ -1281,27 +1284,27 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
 
                 <!-- Sub-tabs for Abilities -->
                 <div class="mt-4 border border-stone-700 rounded overflow-hidden">
-                  <div class="flex bg-stone-900 border-b border-stone-700">
-                    <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors flex items-center justify-center gap-1"
+                  <div class="flex bg-stone-900 border-b border-stone-800">
+                    <button class="flex-1 py-1.5 text-[9px] font-bold uppercase transition-colors flex items-center justify-center gap-0.5"
                             [class.text-amber-500]="fichaSubTab() === 'weapons'"
                             [class.bg-stone-800]="fichaSubTab() === 'weapons'"
                             (click)="fichaSubTab.set('weapons')">
-                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">shield</mat-icon>
-                      Armas
+                      <mat-icon style="font-size: 12px; width: 12px; height: 12px;">shield</mat-icon>
+                      <span class="truncate">Armas</span>
                     </button>
-                    <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors border-l border-stone-700 flex items-center justify-center gap-1"
+                    <button class="flex-1 py-1.5 text-[9px] font-bold uppercase transition-colors border-l border-stone-800 flex items-center justify-center gap-0.5"
                             [class.text-amber-500]="fichaSubTab() === 'spells'"
                             [class.bg-stone-800]="fichaSubTab() === 'spells'"
                             (click)="fichaSubTab.set('spells')">
-                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">auto_fix_high</mat-icon>
-                      Magias
+                      <mat-icon style="font-size: 12px; width: 12px; height: 12px;">auto_fix_high</mat-icon>
+                      <span class="truncate">Magias</span>
                     </button>
-                    <button class="flex-1 py-2 text-[10px] font-bold uppercase transition-colors border-l border-stone-700 flex items-center justify-center gap-1"
+                    <button class="flex-1 py-1.5 text-[9px] font-bold uppercase transition-colors border-l border-stone-800 flex items-center justify-center gap-0.5"
                             [class.text-amber-500]="fichaSubTab() === 'features'"
                             [class.bg-stone-800]="fichaSubTab() === 'features'"
                             (click)="fichaSubTab.set('features')">
-                      <mat-icon style="font-size: 14px; width: 14px; height: 14px;">star</mat-icon>
-                      Habilidades
+                      <mat-icon style="font-size: 12px; width: 12px; height: 12px;">star</mat-icon>
+                      <span class="truncate">Hards</span>
                     </button>
                   </div>
 
@@ -1423,9 +1426,8 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
       }
       <!-- Actions Tab -->
       @if (combat.rightPanelTab() === 'actions') {
-        <app-action-menu class="flex-1 overflow-hidden"></app-action-menu>
+        <app-action-menu class="flex-1 overflow-hidden flex flex-col min-h-0"></app-action-menu>
       }
-    </div>
   `
 })
 export class RightPanelComponent {
@@ -1734,7 +1736,7 @@ export class RightPanelComponent {
     this.previewImageOffsetY.set(null);
   }
 
-  private wheelTimeout: any;
+  private wheelTimeout: ReturnType<typeof setTimeout> | undefined;
 
   onImageWheel(event: WheelEvent) {
     if (!this.isAuthorizedToEditImage()) return;

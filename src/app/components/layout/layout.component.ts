@@ -14,10 +14,12 @@ import { ItemInteractionModalComponent } from '../item-interaction-modal/item-in
 import { AttackModalComponent } from '../attack-modal/attack-modal.component';
 import { DamageModalComponent } from '../damage-modal/damage-modal.component';
 
+import { CombatTrackerComponent } from '../combat-tracker/combat-tracker.component';
+
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [GridComponent, GmPanelComponent, RightPanelComponent, BottomBarComponent, StorySlidesComponent, SceneFilmstripComponent, MatIconModule, CommonModule, ItemInteractionModalComponent, AttackModalComponent, DamageModalComponent],
+  imports: [GridComponent, GmPanelComponent, RightPanelComponent, BottomBarComponent, StorySlidesComponent, SceneFilmstripComponent, MatIconModule, CommonModule, ItemInteractionModalComponent, AttackModalComponent, DamageModalComponent, CombatTrackerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-col h-screen w-screen overflow-hidden bg-black text-stone-200 font-sans">
@@ -27,7 +29,7 @@ import { DamageModalComponent } from '../damage-modal/damage-modal.component';
         
         <!-- Left Panel (GM Only) -->
         @if (auth.currentUser()?.role === 'GM' && combat.gmPanelVisible() && combat.uiVisible()) {
-          <app-gm-panel class="z-20 shadow-2xl"></app-gm-panel>
+          <app-gm-panel></app-gm-panel>
         }
 
         <!-- Center Map or Slides -->
@@ -40,6 +42,10 @@ import { DamageModalComponent } from '../damage-modal/damage-modal.component';
             @if (combat.showStorySlides()) {
               <app-story-slides [slides]="combat.storySlides()"></app-story-slides>
             } @else {
+              <!-- Combat Tracker (Ancorado no mapa, lado esquerdo) -->
+              @if (combat.combatActive() && combat.uiVisible()) {
+                <app-combat-tracker class="absolute top-20 left-4 bottom-8 z-20"></app-combat-tracker>
+              }
               <app-grid></app-grid>
             }
           </div>
@@ -47,7 +53,7 @@ import { DamageModalComponent } from '../damage-modal/damage-modal.component';
 
         <!-- Right Panel (Token Details) -->
         @if (combat.uiVisible() && combat.selectedTokenId()) {
-          <app-right-panel class="z-20 shadow-2xl"></app-right-panel>
+          <app-right-panel></app-right-panel>
         }
 
       </div>
