@@ -18,6 +18,7 @@ export interface Ability {
   applyCondition?: { conditionId: string; duration?: number }; // applies a condition on hit / failed save
   
   attackBonus?: number; // e.g., +5 to hit
+  isProficient?: boolean;
   
   category?: 'weapon' | 'spell' | 'feature' | 'item_effect';
   properties?: string[]; // e.g., ['finesse', 'ranged', 'heavy']

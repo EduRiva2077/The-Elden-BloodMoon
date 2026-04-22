@@ -167,7 +167,8 @@ export class AttackModalComponent {
     const weapon = {
       name: s.ability.name,
       properties: s.ability.properties || [],
-      attackBonus: s.ability.attackBonus
+      attackBonus: s.ability.attackBonus,
+      isProficient: s.ability.isProficient
     };
     
     // We just run a dummy roll to get the attribute used
@@ -179,10 +180,6 @@ export class AttackModalComponent {
     const s = this.state();
     if (!s) return 0;
     
-    if (s.ability.attackBonus !== undefined && s.ability.attackBonus !== 0) {
-      return s.ability.attackBonus;
-    }
-    
     const attacker = {
       stats: (s.attacker.sheet as unknown) as Record<string, number>,
       proficiencyBonus: s.attacker.sheet?.proficiencyBonus || 2,
@@ -191,11 +188,16 @@ export class AttackModalComponent {
     const weapon = {
       name: s.ability.name,
       properties: s.ability.properties || [],
-      attackBonus: s.ability.attackBonus
+      attackBonus: s.ability.attackBonus,
+      isProficient: s.ability.isProficient
     };
     
     const dummy = this.engine.calculateAttackRoll(attacker, weapon, this.isSpell());
-    return dummy.modifier + (attacker.proficiencyBonus || 0);
+    
+    // Total is dummy.modifier + applied prof + attackBonus, all handled by logic internally. 
+    // Wait, dummy already calculates but returns modifier. Let's just calculate appliedProf again or get it from calculateAttackRoll
+    // We can just rely on dummy.total - dummy.naturalRoll
+    return dummy.total - dummy.naturalRoll;
   });
 
   isHit = computed(() => {
@@ -236,7 +238,8 @@ export class AttackModalComponent {
     const weapon = {
       name: s.ability.name,
       properties: s.ability.properties || [],
-      attackBonus: s.ability.attackBonus
+      attackBonus: s.ability.attackBonus,
+      isProficient: s.ability.isProficient
     };
 
     const rollResult = this.engine.calculateAttackRoll(attacker, weapon, this.isSpell(), val || undefined);

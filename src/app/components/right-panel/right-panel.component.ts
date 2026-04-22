@@ -337,6 +337,15 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                     </div>
                   </div>
 
+                  @if (abilityForm.get('category')?.value === 'weapon') {
+                    <div class="flex items-center gap-2">
+                      <label class="flex items-center gap-2 text-[10px] text-stone-400 cursor-pointer p-1">
+                        <input type="checkbox" formControlName="isProficient" class="accent-amber-500">
+                        Proficiente? (Soma +Bônus de Proficiência ao Ataque)
+                      </label>
+                    </div>
+                  }
+
                   @if (abilityForm.get('category')?.value === 'spell' || abilityForm.get('category')?.value === 'item_effect') {
                     <div class="grid grid-cols-2 gap-2">
                       @if (abilityForm.get('category')?.value === 'spell') {
@@ -424,6 +433,9 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                           <div class="p-2 border-b border-stone-700 flex justify-between items-center bg-stone-800/50 cursor-pointer hover:bg-stone-700/50 transition-colors" tabindex="0" (keyup.enter)="selectAbilityForRoll(ability)" (click)="selectAbilityForRoll(ability)">
                             <div class="flex items-center gap-2">
                               <span class="font-bold text-amber-500 text-sm">{{ ability.name }}</span>
+                              @if (ability.isProficient !== false) {
+                                <mat-icon class="text-amber-500" style="font-size: 14px; width: 14px; height: 14px;" title="Proficiente">star</mat-icon>
+                              }
                               @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
                                 <div class="flex items-center gap-1">
                                   <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="editAbility(ability); $event.stopPropagation()" title="Editar">
@@ -1629,6 +1641,7 @@ export class RightPanelComponent {
       damageType: 'slashing',
       description: '',
       attackBonus: 0,
+      isProficient: true,
       category: category,
       spellLevel: 0,
       uses: 0,
@@ -1651,6 +1664,7 @@ export class RightPanelComponent {
       healing: ability.healing || '',
       description: ability.description || '',
       attackBonus: ability.attackBonus || 0,
+      isProficient: ability.isProficient !== undefined ? ability.isProficient : true,
       category: ability.category || 'feature',
       spellLevel: ability.spellLevel || 0,
       uses: ability.uses || 0,
@@ -1710,6 +1724,7 @@ export class RightPanelComponent {
     healing: new FormControl('', { nonNullable: true }),
     description: new FormControl('', { nonNullable: true }),
     attackBonus: new FormControl(0, { nonNullable: true }),
+    isProficient: new FormControl(true, { nonNullable: true }),
     category: new FormControl<'weapon' | 'spell' | 'feature' | 'item_effect'>('feature', { nonNullable: true }),
     spellLevel: new FormControl(0, { nonNullable: true }),
     uses: new FormControl(0, { nonNullable: true }),

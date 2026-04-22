@@ -58,7 +58,7 @@ export class DndCoreEngineService {
 
   calculateAttackRoll(
     attacker: { stats: Record<string, number>, proficiencyBonus: number, spellcastingAbility?: string },
-    weapon: { name: string, properties?: string[], attackBonus?: number },
+    weapon: { name: string, properties?: string[], attackBonus?: number, isProficient?: boolean },
     isSpell: boolean,
     manualRoll?: number
   ): AttackRollResult {
@@ -84,6 +84,9 @@ export class DndCoreEngineService {
           attributeUsed = 'str';
           attributeScore = str;
         }
+      } else if (properties.includes('thrown')) {
+        attributeUsed = 'str';
+        attributeScore = attacker.stats['str'] || 10;
       } else {
         attributeUsed = 'str';
         attributeScore = attacker.stats['str'] || 10;
@@ -91,7 +94,15 @@ export class DndCoreEngineService {
     }
 
     const modifier = this.calculateModifier(attributeScore);
-    const total = naturalRoll + modifier + (attacker.proficiencyBonus || 0) + (weapon.attackBonus || 0);
+    
+    let appliedProficiency = 0;
+    if (isSpell) {
+      appliedProficiency = attacker.proficiencyBonus || 0;
+    } else if (weapon.isProficient) {
+      appliedProficiency = attacker.proficiencyBonus || 0;
+    }
+
+    const total = naturalRoll + modifier + appliedProficiency + (weapon.attackBonus || 0);
 
     return {
       total,
