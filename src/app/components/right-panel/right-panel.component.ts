@@ -268,9 +268,9 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
               <div class="bg-stone-800 rounded border border-stone-700 p-3 mb-4 space-y-3 shadow-md mt-2">
                 <div class="flex justify-between items-center">
                   <h4 class="text-xs font-bold text-amber-500 uppercase">
-                    Adicionar {{ category === 'weapon' ? 'Arma' : category === 'spell' ? 'Magia' : category === 'feature' ? 'Habilidade' : 'Efeito' }}
+                    {{ editingAbilityId() ? 'Editar' : 'Adicionar' }} {{ category === 'weapon' ? 'Arma' : category === 'spell' ? 'Magia' : category === 'feature' ? 'Habilidade' : 'Efeito' }}
                   </h4>
-                  <button (click)="showAddAbilityForm.set(false)" class="text-stone-500 hover:text-stone-300 transition-colors">
+                  <button (click)="cancelAbilityForm()" class="text-stone-500 hover:text-stone-300 transition-colors">
                     <mat-icon style="font-size: 14px; width: 14px; height: 14px;">close</mat-icon>
                   </button>
                 </div>
@@ -361,7 +361,7 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                   <textarea formControlName="description" placeholder="Descrição/Detalhes" rows="2" class="w-full bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500"></textarea>
 
                   <button type="submit" [disabled]="abilityForm.invalid" class="w-full py-1 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 disabled:hover:bg-amber-600 text-stone-900 font-bold rounded text-xs transition-colors">
-                    Adicionar
+                    {{ editingAbilityId() ? 'Salvar Edição' : 'Adicionar' }}
                   </button>
                 </form>
               </div>
@@ -425,9 +425,14 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                             <div class="flex items-center gap-2">
                               <span class="font-bold text-amber-500 text-sm">{{ ability.name }}</span>
                               @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
-                                <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="removeAbility(ability.id); $event.stopPropagation()">
-                                  <mat-icon style="font-size: 14px; width: 14px; height: 14px;">delete</mat-icon>
-                                </button>
+                                <div class="flex items-center gap-1">
+                                  <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="editAbility(ability); $event.stopPropagation()" title="Editar">
+                                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">edit</mat-icon>
+                                  </button>
+                                  <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="removeAbility(ability.id); $event.stopPropagation()" title="Remover">
+                                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">delete</mat-icon>
+                                  </button>
+                                </div>
                               }
                             </div>
                             <span class="text-[10px] font-mono text-stone-400 uppercase bg-stone-900 px-2 py-1 rounded">{{ ability.type }}</span>
@@ -573,9 +578,14 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                               <span class="font-bold text-amber-500 text-sm">{{ ability.name }}</span>
                               <span class="text-[10px] bg-blue-900/50 text-blue-300 px-1 rounded border border-blue-700/50">Nível {{ ability.spellLevel || 0 }}</span>
                               @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
-                                <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="removeAbility(ability.id); $event.stopPropagation()">
-                                  <mat-icon style="font-size: 14px; width: 14px; height: 14px;">delete</mat-icon>
-                                </button>
+                                <div class="flex items-center gap-1">
+                                  <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="editAbility(ability); $event.stopPropagation()" title="Editar">
+                                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">edit</mat-icon>
+                                  </button>
+                                  <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="removeAbility(ability.id); $event.stopPropagation()" title="Remover">
+                                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">delete</mat-icon>
+                                  </button>
+                                </div>
                               }
                             </div>
                             <span class="text-[10px] font-mono text-stone-400 uppercase bg-stone-900 px-2 py-1 rounded">{{ ability.type }}</span>
@@ -731,9 +741,14 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                             <div class="flex items-center gap-2">
                               <span class="font-bold text-amber-500 text-sm">{{ ability.name }}</span>
                               @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
-                                <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="removeAbility(ability.id); $event.stopPropagation()">
-                                  <mat-icon style="font-size: 14px; width: 14px; height: 14px;">delete</mat-icon>
-                                </button>
+                                <div class="flex items-center gap-1">
+                                  <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="editAbility(ability); $event.stopPropagation()" title="Editar">
+                                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">edit</mat-icon>
+                                  </button>
+                                  <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="removeAbility(ability.id); $event.stopPropagation()" title="Remover">
+                                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">delete</mat-icon>
+                                  </button>
+                                </div>
                               }
                             </div>
                             <span class="text-[10px] font-mono text-stone-400 uppercase bg-stone-900 px-2 py-1 rounded">{{ ability.type }}</span>
@@ -877,9 +892,14 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                             <div class="flex items-center gap-2">
                               <span class="font-bold text-amber-500 text-sm">{{ ability.name }}</span>
                               @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
-                                <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="removeAbility(ability.id); $event.stopPropagation()">
-                                  <mat-icon style="font-size: 14px; width: 14px; height: 14px;">delete</mat-icon>
-                                </button>
+                                <div class="flex items-center gap-1">
+                                  <button class="text-stone-500 hover:text-amber-500 transition-colors" (click)="editAbility(ability); $event.stopPropagation()" title="Editar">
+                                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">edit</mat-icon>
+                                  </button>
+                                  <button class="text-stone-500 hover:text-red-500 transition-colors" (click)="removeAbility(ability.id); $event.stopPropagation()" title="Remover">
+                                    <mat-icon style="font-size: 14px; width: 14px; height: 14px;">delete</mat-icon>
+                                  </button>
+                                </div>
                               }
                             </div>
                             <span class="text-[10px] font-mono text-stone-400 uppercase bg-stone-900 px-2 py-1 rounded">{{ ability.type }}</span>
@@ -1596,10 +1616,57 @@ export class RightPanelComponent {
   showDamageField = signal<boolean>(true);
   showHealingField = signal<boolean>(false);
   showAddAbilityForm = signal<boolean>(false);
+  editingAbilityId = signal<string | null>(null);
 
   openAddAbilityForm(category: 'weapon' | 'spell' | 'feature' | 'item_effect') {
-    this.abilityForm.patchValue({ category });
+    this.editingAbilityId.set(null);
+    this.abilityForm.reset({
+      name: '',
+      type: 'action',
+      range: 0,
+      areaShape: 'none',
+      damage: '',
+      damageType: 'slashing',
+      description: '',
+      attackBonus: 0,
+      category: category,
+      spellLevel: 0,
+      uses: 0,
+      maxUses: 0
+    });
+    this.showDamageField.set(true);
+    this.showHealingField.set(false);
     this.showAddAbilityForm.set(true);
+  }
+
+  editAbility(ability: Ability) {
+    this.editingAbilityId.set(ability.id);
+    this.abilityForm.patchValue({
+      name: ability.name,
+      type: ability.type,
+      range: ability.range || 0,
+      areaShape: ability.areaShape || 'none',
+      damage: ability.damage || '',
+      damageType: ability.damageType || 'slashing',
+      healing: ability.healing || '',
+      description: ability.description || '',
+      attackBonus: ability.attackBonus || 0,
+      category: ability.category || 'feature',
+      spellLevel: ability.spellLevel || 0,
+      uses: ability.uses || 0,
+      maxUses: ability.maxUses || 0
+    });
+    
+    this.showDamageField.set(!!ability.damage || (!ability.damage && !ability.healing));
+    this.showHealingField.set(!!ability.healing);
+
+    this.showAddAbilityForm.set(true);
+  }
+
+  cancelAbilityForm() {
+    this.showAddAbilityForm.set(false);
+    this.editingAbilityId.set(null);
+    this.abilityForm.reset();
   }
 
   sheetForm = new FormGroup({
@@ -1692,11 +1759,13 @@ export class RightPanelComponent {
     if (!token) return;
 
     const formValue = this.abilityForm.getRawValue();
+    const currentEditingId = this.editingAbilityId();
+    
     const newAbility: Ability = {
       ...(formValue as Omit<Ability, 'id'>),
       damage: this.showDamageField() ? formValue.damage : '',
       healing: this.showHealingField() ? formValue.healing : '',
-      id: Math.random().toString(36).substring(2, 9),
+      id: currentEditingId ? currentEditingId : Math.random().toString(36).substring(2, 9),
       // Add default AoE params based on shape if missing
       ...(formValue.areaShape === 'circle' ? { radius: 6 } : {}),
       ...(formValue.areaShape === 'cone' ? { angle: 60 } : {}),
@@ -1704,25 +1773,16 @@ export class RightPanelComponent {
       ...(formValue.areaShape === 'rectangle' ? { width: 6, length: 6 } : {})
     };
 
-    const newAbilities = [...(token.abilities || []), newAbility];
+    let newAbilities: Ability[];
+    if (currentEditingId) {
+      newAbilities = (token.abilities || []).map(a => a.id === currentEditingId ? newAbility : a);
+    } else {
+      newAbilities = [...(token.abilities || []), newAbility];
+    }
+    
     this.combat.updateToken(token.id, { abilities: newAbilities });
 
-    this.abilityForm.reset({
-      name: '',
-      type: 'action',
-      range: 0,
-      areaShape: 'none',
-      damage: '',
-      damageType: 'slashing',
-      description: '',
-      attackBonus: 0,
-      category: token.type === 'item' ? 'item_effect' : 'feature',
-      spellLevel: 0,
-      uses: 0,
-      maxUses: 0
-    });
-    
-    this.showAddAbilityForm.set(false);
+    this.cancelAbilityForm();
   }
 
   removeAbility(id: string) {
