@@ -56,7 +56,7 @@ import { DndCoreEngineService } from '../../services/dnd-core-engine.service';
                 @case ('critical') {
                   <div class="bg-red-500/20 border border-red-500/50 rounded p-3 text-center animate-pulse">
                     <p class="text-sm font-bold text-red-500 uppercase tracking-widest">CRÍTICO!</p>
-                    <p class="text-xs text-red-400/80">Dano Máximo Aplicado Automaticamente!</p>
+                    <p class="text-xs text-red-400/80">Role o dobro dos dados de dano e some o modificador flat.</p>
                   </div>
                 }
                 @default {
@@ -68,9 +68,8 @@ import { DndCoreEngineService } from '../../services/dnd-core-engine.service';
               }
             </div>
 
-            @if (state()?.hitTier !== 'critical') {
-              <!-- Parsing Display -->
-              <div class="bg-stone-800 p-6 rounded border border-stone-700 text-center space-y-4 shadow-inner">
+            <!-- Parsing Display -->
+            <div class="bg-stone-800 p-6 rounded border border-stone-700 text-center space-y-4 shadow-inner">
                 <p class="text-base text-stone-300 font-bold">Role os dados físicos na mesa:</p>
                 
                 <div class="flex justify-center items-end gap-3 my-4">
@@ -131,18 +130,34 @@ import { DndCoreEngineService } from '../../services/dnd-core-engine.service';
                   </p>
                 }
               </div>
-            } @else {
-              <!-- Critical Auto-calculate Display -->
-              <div class="bg-stone-800 p-4 rounded border border-stone-700 text-center space-y-2">
-                <p class="text-sm text-stone-400">Dano calculado em seu limite máximo.</p>
-                <p class="text-xs text-stone-500 mt-2 font-mono bg-stone-900/50 p-1 rounded">
-                  Dano Base: "{{ state()?.ability?.damage }}"
-                </p>
-              </div>
-            }
+
+            <!-- Flat Reductions / Modifiers that apply before Resistance -->
+            <div class="bg-stone-800 p-4 rounded border border-stone-700">
+               <label class="text-xs font-bold text-stone-500 uppercase flex justify-between items-center">
+                 <span>Redução Plana de Dano</span>
+                 <input type="number" [(ngModel)]="flatReduction" class="w-16 bg-stone-900 border border-stone-700 rounded px-2 py-1 text-center text-stone-200 focus:outline-none focus:border-amber-500" min="0">
+               </label>
+               <p class="text-[10px] text-stone-500 mt-1">Ex: Heavy Armor Master. Subtrai ANTES da resistência.</p>
+            </div>
+
+            <!-- Set Target Defenses -->
+            <div class="bg-stone-800 p-4 rounded border border-stone-700 space-y-3 max-h-48 overflow-y-auto">
+               <h4 class="text-xs font-bold text-stone-400 uppercase border-b border-stone-700 pb-2">Defesas dos Alvos (Pós-Redução)</h4>
+               @for (target of state()?.targets; track target.id) {
+                 <div class="flex items-center justify-between text-sm py-1 border-b border-stone-700/50 last:border-0">
+                   <span class="text-stone-300 truncate w-1/3" [title]="target.name">{{ target.name }}</span>
+                   <select [ngModel]="targetDefenses()[target.id] || 'normal'" (ngModelChange)="setDefense(target.id, $event)" class="w-2/3 bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs text-stone-300 focus:outline-none focus:border-amber-500">
+                      <option value="normal">Dano Normal</option>
+                      <option value="resistance">Resistência (1/2)</option>
+                      <option value="vulnerable">Vulnerabilidade (x2)</option>
+                      <option value="immune">Imunidade (0)</option>
+                   </select>
+                 </div>
+               }
+            </div>
             
             <div class="flex justify-between items-center bg-stone-950 p-5 rounded-lg border border-stone-700 shadow-xl">
-               <span class="text-base font-black text-stone-500 uppercase tracking-widest">Total Resultante</span>
+               <span class="text-base font-black text-stone-500 uppercase tracking-widest">Total Base</span>
                <span class="text-4xl font-mono font-black text-amber-500">{{ calculatedTotal() }}</span>
             </div>
 
@@ -152,7 +167,7 @@ import { DndCoreEngineService } from '../../services/dnd-core-engine.service';
                 CANCELAR
               </button>
               <button (click)="applyDamage()" 
-                      [disabled]="(state()?.hitTier !== 'critical' && parsedDamage().diceType && manualRoll() === null) || errorMessage() !== null"
+                      [disabled]="(parsedDamage().diceType && manualRoll() === null) || errorMessage() !== null"
                       class="flex-1 py-3 bg-red-600 hover:bg-red-500 disabled:bg-stone-800 disabled:text-stone-600 text-white font-bold rounded transition-colors flex items-center justify-center gap-2">
                 <mat-icon>gavel</mat-icon>
                 APLICAR
@@ -184,7 +199,18 @@ export class DamageModalComponent {
   parsedDamage = computed(() => {
     const s = this.state();
     if (!s || !s.ability.damage) return { diceCount: 0, diceType: '', modifier: 0 };
-    return this.parseDamageString(s.ability.damage);
+    const parsed = this.parseDamageString(s.ability.damage);
+    
+    // Off-hand: Do not add positive modifier
+    if (s.ability.isOffHand && parsed.modifier > 0) {
+       parsed.modifier = 0;
+    }
+
+    if (this.hitTier() === 'critical') {
+      parsed.diceCount *= 2; // Crítico: Rola os dados duas vezes
+    }
+    
+    return parsed;
   });
 
   hitTier = computed(() => this.state()?.hitTier || 'solid');
@@ -210,8 +236,6 @@ export class DamageModalComponent {
   });
 
   errorMessage = computed(() => {
-    if (this.hitTier() === 'critical') return null; // No manual input on critical
-
     const val = this.manualRoll();
     const max = this.maxPossibleRoll();
     const min = this.minPossibleRoll();
@@ -227,22 +251,20 @@ export class DamageModalComponent {
     const tier = this.hitTier();
     const parsed = this.parsedDamage();
     
-    // Auto-calcula Dano Máximo no Crítico
-    if (tier === 'critical') {
-      const maxRoll = this.rawMaxDiceDamage();
-      return Math.max(0, maxRoll + parsed.modifier);
-    }
-    
     const manual = this.manualRoll();
     
     // Se não tiver type de dado (ex: dano fixo tipo "5"), usa apenas o modifier
     if (!parsed.diceType && parsed.modifier > 0 && manual === null) {
-      return tier === 'grazing' ? Math.floor(parsed.modifier / 2) : parsed.modifier;
+      let val = parsed.modifier;
+      val = Math.max(0, val - this.flatReduction());
+      return tier === 'grazing' ? Math.floor(val / 2) : val;
     }
     
     if (manual === null) return 0;
     
     let rawTotal = manual + parsed.modifier;
+    rawTotal = Math.max(0, rawTotal - this.flatReduction()); // Subtrai redução flat
+
     if (tier === 'grazing') {
       rawTotal = Math.floor(rawTotal / 2);
     }
@@ -250,34 +272,55 @@ export class DamageModalComponent {
     return Math.max(0, rawTotal);
   });
 
+  flatReduction = signal<number>(0);
+  targetDefenses = signal<Record<string, 'normal'|'resistance'|'vulnerable'|'immune'>>({});
+
+  // Reset defenses when modal opens
+  constructor() {
+    // Empty
+  }
+
   close() {
     this.combat.closeDamageModal();
     this.manualRoll.set(null);
+    this.flatReduction.set(0);
+    this.targetDefenses.set({});
+  }
+
+  setDefense(targetId: string, def: 'normal'|'resistance'|'vulnerable'|'immune') {
+    this.targetDefenses.update(d => ({ ...d, [targetId]: def }));
   }
 
   applyDamage() {
     const s = this.state();
-    const total = this.calculatedTotal();
+    const rawTotalAfterFlat = this.calculatedTotal();
     
-    if (!s || total < 0 || this.manualRoll() === null && this.parsedDamage().diceType) return;
+    // We already checked calculatedTotal handles manual empty logic:
+    // If it requires a roll but it's null, the button is disabled anyway.
+    if (!s || rawTotalAfterFlat < 0 || (this.manualRoll() === null && this.parsedDamage().diceType)) return;
 
-    if (s.ability.areaShape && s.ability.areaShape !== 'none') {
-       // Area damage
-       s.targets.forEach(target => {
-          this.combat.updateToken(target.id, { hp: Math.max(0, target.hp - total) });
-          // Optional: handle half damage on save here if needed, but for now we apply full to all in area for simplicity.
-          // In a complex system, there'd be saving throws per target.
-          const log = `Dano em área contra ${target.name} = ${total}`;
-          this.combat.addNotification(log, 'info');
-       });
-    } else {
-       // Single target damage
-       s.targets.forEach(target => {
-         this.combat.updateToken(target.id, { hp: Math.max(0, target.hp - total) });
-         const log = `Dano contra ${target.name} = ${total} recebido!`;
-         this.combat.addNotification(log, 'info');
-       });
-    }
+    s.targets.forEach(target => {
+       let targetFinalDamage = rawTotalAfterFlat;
+       const def = this.targetDefenses()[target.id] || 'normal';
+
+       if (def === 'resistance') {
+         targetFinalDamage = Math.floor(targetFinalDamage / 2);
+       } else if (def === 'vulnerable') {
+         targetFinalDamage = targetFinalDamage * 2;
+       } else if (def === 'immune') {
+         targetFinalDamage = 0;
+       }
+
+       this.combat.updateToken(target.id, { hp: Math.max(0, target.hp - targetFinalDamage) });
+       
+       let reason = '';
+       if (def === 'resistance') reason = ' (Resistiu)';
+       if (def === 'vulnerable') reason = ' (Vulnerável!)';
+       if (def === 'immune') reason = ' (Imune)';
+
+       const log = `Dano contra ${target.name} = ${targetFinalDamage} recebido!${reason}`;
+       this.combat.addNotification(log, 'info');
+    });
 
     this.close();
   }

@@ -19,6 +19,7 @@ export interface Ability {
   
   attackBonus?: number; // e.g., +5 to hit
   isProficient?: boolean;
+  isOffHand?: boolean; // Off-hand attacks do NOT add positive ability modifiers to damage
   
   category?: 'weapon' | 'spell' | 'feature' | 'item_effect';
   properties?: string[]; // e.g., ['finesse', 'ranged', 'heavy']

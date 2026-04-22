@@ -338,11 +338,15 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                   </div>
 
                   @if (abilityForm.get('category')?.value === 'weapon') {
-                    <div class="flex items-center gap-2">
-                      <label class="flex items-center gap-2 text-[10px] text-stone-400 cursor-pointer p-1">
-                        <input type="checkbox" formControlName="isProficient" class="accent-amber-500">
-                        Proficiente? (Soma +Bônus de Proficiência ao Ataque)
-                      </label>
+                    <div class="flex flex-col gap-2 border bg-stone-900 border-stone-700 rounded p-2">
+                       <label class="flex items-center gap-2 text-xs text-stone-300 cursor-pointer font-bold">
+                         <input type="checkbox" formControlName="isProficient" class="accent-amber-500 w-4 h-4">
+                         Proficiente (Soma +Bônus de Proficiência ao Ataque)
+                       </label>
+                       <label class="flex items-center gap-2 text-xs text-stone-300 cursor-pointer font-bold">
+                         <input type="checkbox" formControlName="isOffHand" class="accent-amber-500 w-4 h-4">
+                         Ataque Secundário / Off-hand (Ignora modificador de atributo no dano)
+                       </label>
                     </div>
                   }
 
@@ -435,6 +439,9 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                               <span class="font-bold text-amber-500 text-sm">{{ ability.name }}</span>
                               @if (ability.isProficient !== false) {
                                 <mat-icon class="text-amber-500" style="font-size: 14px; width: 14px; height: 14px;" title="Proficiente">star</mat-icon>
+                              }
+                              @if (ability.isOffHand) {
+                                <span class="bg-stone-900 border border-stone-600 text-[10px] text-stone-400 font-bold px-1 rounded uppercase">Off-hand</span>
                               }
                               @if ((auth.currentUser()?.role === 'GM' && !combat.isPlayMode()) || selectedToken()?.controlledBy === auth.currentUser()?.id) {
                                 <div class="flex items-center gap-1">
@@ -1642,6 +1649,7 @@ export class RightPanelComponent {
       description: '',
       attackBonus: 0,
       isProficient: true,
+      isOffHand: false,
       category: category,
       spellLevel: 0,
       uses: 0,
@@ -1665,6 +1673,7 @@ export class RightPanelComponent {
       description: ability.description || '',
       attackBonus: ability.attackBonus || 0,
       isProficient: ability.isProficient !== undefined ? ability.isProficient : true,
+      isOffHand: ability.isOffHand || false,
       category: ability.category || 'feature',
       spellLevel: ability.spellLevel || 0,
       uses: ability.uses || 0,
@@ -1725,6 +1734,7 @@ export class RightPanelComponent {
     description: new FormControl('', { nonNullable: true }),
     attackBonus: new FormControl(0, { nonNullable: true }),
     isProficient: new FormControl(true, { nonNullable: true }),
+    isOffHand: new FormControl(false, { nonNullable: true }),
     category: new FormControl<'weapon' | 'spell' | 'feature' | 'item_effect'>('feature', { nonNullable: true }),
     spellLevel: new FormControl(0, { nonNullable: true }),
     uses: new FormControl(0, { nonNullable: true }),

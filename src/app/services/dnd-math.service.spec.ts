@@ -68,16 +68,67 @@ describe('DndMathService - Cálculos Base (D&D 5e)', () => {
   });
 
   it('deve calcular HP somado correto até do nível do jogador (Teórico)', () => {
-    // Fighter lvl 3 (hit die 10), con 14 (mod +2).
-    // Nvl 1 = 10 + 2 = 12. Nvl 2 = 6 + 2 = 8. Nvl 3 = 6 + 2 = 8.
-    // Total = 12 + 8 + 8 = 28.
     const fighterHp = service.calculateTotalMaxHp(3, 10, 14);
     expect(fighterHp).toBe(28);
 
-    // Wizard lvl 5 (hit die 6), con 10 (mod 0).
-    // Nvl 1 = 6 + 0 = 6. Nvl 2,3,4,5 = 4 each (16 total). Total = 22.
     const wizardHp = service.calculateTotalMaxHp(5, 6, 10);
     expect(wizardHp).toBe(22);
   });
 
+  it('deve calcular CA: Unarmored (10 + Dex)', () => {
+     // DEX 14 (+2)
+     const ac = service.calculateArmorClass(14, 10, 10, { armorType: 'none', hasShield: false });
+     expect(ac).toBe(12);
+  });
+
+  it('deve calcular CA: Light Armor (Base + Dex)', () => {
+     // DEX 16 (+3), Leather Armor (Base 11)
+     const ac = service.calculateArmorClass(16, 10, 10, { armorBaseAc: 11, armorType: 'light', hasShield: false });
+     expect(ac).toBe(14); // 11 + 3
+  });
+
+  it('deve calcular CA: Medium Armor (Base + Dex máx 2)', () => {
+     // DEX 18 (+4), Hide Armor (Base 12) => O Modificador deve ser capado em +2
+     const ac = service.calculateArmorClass(18, 10, 10, { armorBaseAc: 12, armorType: 'medium', hasShield: false });
+     expect(ac).toBe(14); // 12 + 2 = 14
+  });
+
+  it('deve calcular CA: Medium Armor MAster (Base + Dex máx 3)', () => {
+     // DEX 18 (+4), Medium Armor Master (máx 3), Hide Armor (12)
+     const ac = service.calculateArmorClass(18, 10, 10, { armorBaseAc: 12, armorType: 'medium', hasMediumArmorMaster: true, hasShield: false });
+     expect(ac).toBe(15); // 12 + 3 = 15
+  });
+
+  it('deve calcular CA: Heavy Armor ignorando o modificador de destreza positivo e negativo', () => {
+     // DEX 8 (-1), Plate Armor (Base 18)
+     const acNeg = service.calculateArmorClass(8, 10, 10, { armorBaseAc: 18, armorType: 'heavy', hasShield: false });
+     expect(acNeg).toBe(18); // 18 + 0
+
+     // DEX 20 (+5), Chain Mail (Base 16)
+     const acPos = service.calculateArmorClass(20, 10, 10, { armorBaseAc: 16, armorType: 'heavy', hasShield: false });
+     expect(acPos).toBe(16); // 16 + 0
+  });
+
+  it('deve calcular CA: Defesa Natural de Bárbaro', () => {
+     const ac = service.calculateArmorClass(14, 16, 10, { armorType: 'none', hasShield: false, unarmoredDefenseClass: 'barbarian' });
+     expect(ac).toBe(15); // 10 + 2 (Dex) + 3 (Con)
+  });
+
+  it('deve calcular CA: Defesa Natural de Monge', () => {
+     const ac = service.calculateArmorClass(16, 10, 16, { armorType: 'none', hasShield: false, unarmoredDefenseClass: 'monk' });
+     expect(ac).toBe(16); // 10 + 3 (Dex) + 3 (Wis)
+  });
+
+  it('deve anular a Defesa Natural de Monge se equipar escudo e regressar à CA básica 10 + DEX', () => {
+     const ac = service.calculateArmorClass(16, 10, 18, { armorType: 'none', hasShield: true, unarmoredDefenseClass: 'monk' });
+     // Basic Unarmored = 10 + 3 (Dex) = 13
+     // Adds Shield (+2) = 15. The Wisdom is ignored because monks drop defense when holding shield!
+     expect(ac).toBe(15); 
+  });
+
+  it('Bárbaros podem usar escudo juntamente com Unarmored defense', () => {
+     const ac = service.calculateArmorClass(14, 16, 10, { armorType: 'none', hasShield: true, unarmoredDefenseClass: 'barbarian' });
+     // 10 + 2 (Dex) + 3 (Con) + 2 (Shield) = 17
+     expect(ac).toBe(17);
+  });
 });

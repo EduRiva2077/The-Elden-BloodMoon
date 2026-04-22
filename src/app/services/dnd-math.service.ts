@@ -75,6 +75,75 @@ export class DndMathService {
     return hpPrimeiroNivel + (hpSubsequenteMedia * (level - 1));
   }
 
+  /**
+   * Calcula a Classe de Armadura (AC) considerando as regras oficiais para evitar
+   * sobreposição (stacking) incorreta de bônus, como Defesa Sem Armadura vs Armaduras.
+   */
+  calculateArmorClass(
+    dexScore: number,
+    conScore: number,
+    wisScore: number,
+    config: {
+      armorBaseAc?: number;
+      armorType: 'none' | 'light' | 'medium' | 'heavy';
+      hasShield: boolean;
+      unarmoredDefenseClass?: 'barbarian' | 'monk' | 'none';
+      hasMediumArmorMaster?: boolean;
+    }
+  ): number {
+    const dexMod = this.calculateModifier(dexScore);
+    const conMod = this.calculateModifier(conScore);
+    const wisMod = this.calculateModifier(wisScore);
+
+    let calculatedAC = 10; // Default baseline
+
+    // Shield bonus (+2)
+    const shieldBonus = config.hasShield ? 2 : 0;
+
+    if (config.armorType === 'none') {
+      // Unarmored Calculations
+      
+      let standardUnarmored = 10 + dexMod;
+      let barbarianUnarmored = 10 + dexMod + conMod; // Shield is allowed, but handled structurally later
+      let monkUnarmored = 10 + dexMod + wisMod;      // Shield NOT allowed
+
+      // Se é Monge e tem escudo equipado, as regras determinam que a C.A passa a ser a padrão.
+      if (config.unarmoredDefenseClass === 'monk' && config.hasShield) {
+         calculatedAC = standardUnarmored;
+      }
+      else if (config.unarmoredDefenseClass === 'barbarian') {
+         // O jogador pode ter multiclasse Bárbaro/Monge. As regras dizem que se ganha "Unarmored Defense" de uma classe, não ganha da outra. Vamos priorizar a declaração do config.
+         calculatedAC = Math.max(standardUnarmored, barbarianUnarmored);
+      }
+      else if (config.unarmoredDefenseClass === 'monk' && !config.hasShield) {
+         calculatedAC = Math.max(standardUnarmored, monkUnarmored);
+      }
+      else {
+         calculatedAC = standardUnarmored;
+      }
+
+    } else if (config.armorType === 'light') {
+      // Base + Mod Dex
+      const base = config.armorBaseAc || 11; // 11 is baseline for padded/leather 
+      calculatedAC = base + dexMod;
+      
+    } else if (config.armorType === 'medium') {
+      // Base + Mod Dex (Max 2, or Max 3 if mastered)
+      const base = config.armorBaseAc || 12; // 12 baseline for hide
+      const maxDex = config.hasMediumArmorMaster ? 3 : 2;
+      calculatedAC = base + Math.min(Math.max(0, dexMod), maxDex); // Dex penalities still apply normally, but positive stays within bound.
+      // Retracting: actually D&D bounds the modifier. Math.min(dexMod, maxDex) works for both positives and negatives.
+      calculatedAC = base + Math.min(dexMod, maxDex);
+
+    } else if (config.armorType === 'heavy') {
+      // Base only. Dex is ignored completely regardless if positive or negative.
+      const base = config.armorBaseAc || 14; // 14 baseline for ring mail
+      calculatedAC = base;
+    }
+
+    return calculatedAC + shieldBonus;
+  }
+
   // --- Geometria de Combate (Correção de AoE) ---
 
   isPointInCircle(px: number, py: number, cx: number, cy: number, radius: number): boolean {
