@@ -379,9 +379,25 @@ export class ActionMenuComponent {
     const modifier = this.engine.calculateModifier(attrScore);
 
     // 2. Get Proficiency Bonus
-    // Como a ficha (CharacterSheet) não rastreia proficiências individuais de perícias e salvaguardas,
-    // o bônus de proficiência não será aplicado automaticamente aqui.
-    const profBonus = 0;
+    let profBonus = 0;
+    const baseProf = (sheet?.['proficiencyBonus'] as number) || 2;
+
+    if (type === 'skill') {
+      // Check if token has skill proficiency (assuming token.sheet.skills exists, or fallback to 0)
+      const skills = sheet?.['skills'] as Record<string, { proficient: boolean; expertise: boolean }> | undefined;
+      if (skills && skills[test.id]?.proficient) {
+        profBonus = baseProf;
+        if (skills[test.id]?.expertise) {
+          profBonus *= 2;
+        }
+      }
+    } else if (type === 'save') {
+      // Check if token has save proficiency
+      const saveProfs = (sheet?.['saveProficiencies'] as string[]) || [];
+      if (saveProfs.includes(test.attr)) {
+        profBonus = baseProf;
+      }
+    }
 
     // 3. Roll
     const isCritical = manualRoll === 20;
@@ -389,9 +405,7 @@ export class ActionMenuComponent {
     const modifiers = modifier + profBonus;
     const total = manualRoll + modifiers;
 
-    let log = `d20: [${manualRoll}] + Mod: ${modifier}`;
-    if (profBonus > 0) log += ` + Prof: ${profBonus}`;
-    log += ` = ${total}`;
+    let log = `d20: [${manualRoll}] + Mod: ${modifier} + Prof: ${profBonus} = ${total}`;
     if (isCritical) log += ' (CRÍTICO!)';
     if (isCriticalFail) log += ' (FALHA CRÍTICA!)';
 
