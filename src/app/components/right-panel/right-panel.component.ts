@@ -1313,7 +1313,12 @@ import { DND5E_CLASSES, DND5E_RACES, DND5E_ALIGNMENTS, DND5E_BACKGROUNDS, findCl
                     }
                   </div>
                 <div class="flex flex-col gap-1.5 mt-3 text-stone-400 bg-stone-900 border border-stone-800 rounded p-2 text-xs">
-                    <div class="flex items-center justify-between"><div class="flex items-center gap-1"><mat-icon class="text-stone-500 text-[14px] leading-none" style="width: 14px; height: 14px;">favorite</mat-icon><span class="text-stone-500 font-bold uppercase text-[10px]">PV</span></div> <span class="font-mono text-stone-300 font-bold">{{ sheet.hp }}/{{ sheet.maxHp }}</span></div>
+                    <div class="space-y-1">
+                      <div class="flex items-center justify-between"><div class="flex items-center gap-1"><mat-icon class="text-red-500 text-[14px] leading-none" style="width: 14px; height: 14px;">favorite</mat-icon><span class="text-stone-500 font-bold uppercase text-[10px]">PV</span></div> <span class="font-mono text-stone-300 font-bold">{{ sheet.hp }}/{{ sheet.maxHp }}</span></div>
+                      <div class="h-2 bg-stone-950 rounded-full overflow-hidden border border-stone-700">
+                        <div class="h-full rounded-full transition-all duration-500" [style.width.%]="(sheet.hp / sheet.maxHp) * 100" [class.bg-green-500]="sheet.hp > sheet.maxHp * 0.5" [class.bg-amber-500]="sheet.hp <= sheet.maxHp * 0.5 && sheet.hp > sheet.maxHp * 0.25" [class.bg-red-500]="sheet.hp <= sheet.maxHp * 0.25"></div>
+                      </div>
+                    </div>
                     <div class="flex items-center justify-between"><div class="flex items-center gap-1"><mat-icon class="text-stone-500 text-[14px] leading-none" style="width: 14px; height: 14px;">auto_awesome</mat-icon><span class="text-stone-500 font-bold uppercase text-[10px]">Magias</span></div> <span class="font-mono text-stone-300">{{ sheet.spellUses }}/{{ sheet.maxSpellUses }}</span></div>
                     <div class="border-t border-stone-800 my-0.5"></div>
                     <div class="flex items-center justify-between"><div class="flex items-center gap-1"><mat-icon class="text-stone-500 text-[14px] leading-none" style="width: 14px; height: 14px;">school</mat-icon><span class="text-stone-500 font-bold uppercase text-[10px]">Classe</span></div> <span class="truncate text-stone-300 text-[11px] max-w-[100px] text-right" title="{{ sheet.class }}">{{ sheet.class }}</span></div>
@@ -1353,7 +1358,7 @@ import { DND5E_CLASSES, DND5E_RACES, DND5E_ALIGNMENTS, DND5E_BACKGROUNDS, findCl
 
                 <!-- Attributes -->
                 <div class="grid grid-cols-3 gap-2">
-                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm">
+                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm hover:border-amber-500/30 hover:bg-stone-800/80 transition-colors cursor-default">
                     <div class="text-[10px] text-stone-500 uppercase font-black flex items-center gap-1">
                       <mat-icon style="font-size: 10px; width: 10px; height: 10px;">fitness_center</mat-icon>
                       FOR
@@ -1361,7 +1366,7 @@ import { DND5E_CLASSES, DND5E_RACES, DND5E_ALIGNMENTS, DND5E_BACKGROUNDS, findCl
                     <div class="font-bold text-lg text-stone-200">{{ sheet.str }}</div>
                     <div class="text-[10px] text-stone-400 font-mono">{{ mathService.calculateModifier(sheet.str) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.str) }}</div>
                   </div>
-                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm">
+                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm hover:border-amber-500/30 hover:bg-stone-800/80 transition-colors cursor-default">
                     <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
                       <mat-icon style="font-size: 10px; width: 10px; height: 10px;">directions_run</mat-icon>
                       DES
@@ -1369,7 +1374,7 @@ import { DND5E_CLASSES, DND5E_RACES, DND5E_ALIGNMENTS, DND5E_BACKGROUNDS, findCl
                     <div class="font-bold text-lg text-stone-200">{{ sheet.dex }}</div>
                     <div class="text-[10px] text-stone-400 font-mono">{{ mathService.calculateModifier(sheet.dex) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.dex) }}</div>
                   </div>
-                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm">
+                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm hover:border-amber-500/30 hover:bg-stone-800/80 transition-colors cursor-default">
                     <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
                       <mat-icon style="font-size: 10px; width: 10px; height: 10px;">favorite</mat-icon>
                       CON
@@ -1377,7 +1382,7 @@ import { DND5E_CLASSES, DND5E_RACES, DND5E_ALIGNMENTS, DND5E_BACKGROUNDS, findCl
                     <div class="font-bold text-lg text-stone-200">{{ sheet.con }}</div>
                     <div class="text-[10px] text-stone-400 font-mono">{{ mathService.calculateModifier(sheet.con) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.con) }}</div>
                   </div>
-                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm">
+                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm hover:border-amber-500/30 hover:bg-stone-800/80 transition-colors cursor-default">
                     <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
                       <mat-icon style="font-size: 10px; width: 10px; height: 10px;">menu_book</mat-icon>
                       INT
@@ -1385,7 +1390,7 @@ import { DND5E_CLASSES, DND5E_RACES, DND5E_ALIGNMENTS, DND5E_BACKGROUNDS, findCl
                     <div class="font-bold text-lg text-stone-200">{{ sheet.int }}</div>
                     <div class="text-[10px] text-stone-400 font-mono">{{ mathService.calculateModifier(sheet.int) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.int) }}</div>
                   </div>
-                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm">
+                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm hover:border-amber-500/30 hover:bg-stone-800/80 transition-colors cursor-default">
                     <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
                       <mat-icon style="font-size: 10px; width: 10px; height: 10px;">visibility</mat-icon>
                       SAB
@@ -1393,7 +1398,7 @@ import { DND5E_CLASSES, DND5E_RACES, DND5E_ALIGNMENTS, DND5E_BACKGROUNDS, findCl
                     <div class="font-bold text-lg text-stone-200">{{ sheet.wis }}</div>
                     <div class="text-[10px] text-stone-400 font-mono">{{ mathService.calculateModifier(sheet.wis) >= 0 ? '+' : '' }}{{ mathService.calculateModifier(sheet.wis) }}</div>
                   </div>
-                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm">
+                  <div class="bg-stone-900 border border-stone-800 rounded p-2 text-center flex flex-col items-center shadow-sm hover:border-amber-500/30 hover:bg-stone-800/80 transition-colors cursor-default">
                     <div class="text-[10px] text-stone-500 uppercase font-bold flex items-center gap-1">
                       <mat-icon style="font-size: 10px; width: 10px; height: 10px;">record_voice_over</mat-icon>
                       CAR

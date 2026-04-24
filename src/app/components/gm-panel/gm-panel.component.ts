@@ -29,14 +29,14 @@ import { MatIconModule } from '@angular/material/icon';
             <div class="space-y-4">
               <div class="space-y-2">
                 <div class="flex justify-between items-center border-b border-stone-700 pb-1">
-                  <h3 class="font-bold text-amber-500">Fundo do Mapa</h3>
+                  <h3 class="font-bold text-amber-500 flex items-center gap-2"><mat-icon style="font-size:16px;width:16px;height:16px;">image</mat-icon>Fundo do Mapa</h3>
                   <button (click)="clearMap()" class="text-[10px] bg-red-900/50 hover:bg-red-900 text-red-200 px-2 py-0.5 rounded border border-red-900 transition-colors" title="Remove todos os tokens e o fundo">
                     Limpar Mapa
                   </button>
                 </div>
                 <div class="flex flex-col gap-2">
                   <div class="flex flex-col gap-1">
-                    <label for="mapBgInput" class="text-xs text-stone-400">URL da Imagem</label>
+                    <label for="mapBgInput" class="text-xs text-stone-400 flex items-center gap-1"><mat-icon style="font-size:12px;width:12px;height:12px;">link</mat-icon>URL da Imagem</label>
                     <input id="mapBgInput" type="text" 
                            [value]="combat.mapBackgroundImage() || ''" 
                            (change)="updateMapBackground($event)"
@@ -130,7 +130,7 @@ import { MatIconModule } from '@angular/material/icon';
           <div class="p-4 space-y-6">
             <!-- Add Token Settings -->
             <div class="space-y-2">
-              <h3 class="font-bold text-amber-500 border-b border-stone-700 pb-1">Adicionar Novo Token</h3>
+              <h3 class="font-bold text-amber-500 border-b border-stone-700 pb-1 flex items-center gap-2"><mat-icon style="font-size:16px;width:16px;height:16px;">add_circle</mat-icon>Adicionar Novo Token</h3>
               <div class="flex flex-col gap-2">
                 <label for="newTokenType" class="text-xs text-stone-400">Tipo de Token</label>
                 <select id="newTokenType" #newTokenType class="bg-stone-800 border border-stone-700 rounded px-2 py-1 text-sm focus:outline-none focus:border-amber-500">
@@ -149,21 +149,21 @@ import { MatIconModule } from '@angular/material/icon';
 
             <!-- Selected Token Settings -->
             <div class="space-y-2">
-              <h3 class="font-bold text-amber-500 border-b border-stone-700 pb-1">Token Selecionado</h3>
+              <h3 class="font-bold text-amber-500 border-b border-stone-700 pb-1 flex items-center gap-2"><mat-icon style="font-size:16px;width:16px;height:16px;">token</mat-icon>Token Selecionado</h3>
               
               @if (selectedToken()) {
                 <div class="space-y-3">
                   <div class="flex flex-col gap-1">
-                    <label for="tokenNameInput" class="text-xs text-stone-400">Nome</label>
+                    <label for="tokenNameInput" class="text-xs text-stone-400 flex items-center gap-1"><mat-icon style="font-size:12px;width:12px;height:12px;">badge</mat-icon>Nome do Token</label>
                     <input id="tokenNameInput" type="text" 
                            [value]="selectedToken()?.name" 
                            (change)="updateTokenField('name', $event)"
-                           class="bg-stone-800 border border-stone-700 rounded px-2 py-1 text-sm focus:outline-none focus:border-amber-500">
+                           class="bg-stone-800 border border-amber-500/30 rounded px-3 py-2 text-sm focus:outline-none focus:border-amber-500 font-bold text-amber-500">
                   </div>
                   
                   <div class="flex flex-col gap-2">
                     <div class="flex flex-col gap-1">
-                      <label for="tokenImgInput" class="text-xs text-stone-400">URL da Imagem</label>
+                      <label for="tokenImgInput" class="text-xs text-stone-400 flex items-center gap-1"><mat-icon style="font-size:12px;width:12px;height:12px;">link</mat-icon>URL da Imagem</label>
                       <input id="tokenImgInput" type="text" 
                              [value]="selectedToken()?.imageUrl || ''" 
                              (change)="updateTokenField('imageUrl', $event)"
@@ -273,7 +273,7 @@ import { MatIconModule } from '@angular/material/icon';
 
               <!-- List of tokens to set initiative -->
               <div class="pt-4 border-t border-stone-800">
-                <h4 class="text-xs font-bold text-stone-400 mb-3 uppercase tracking-wider">Definir Iniciativas</h4>
+                <h4 class="text-xs font-bold text-amber-500 mb-3 uppercase tracking-wider flex items-center gap-1.5"><mat-icon style="font-size:14px;width:14px;height:14px;">timer</mat-icon>Definir Iniciativas</h4>
                 <div class="space-y-2 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
                   @for (token of combat.tokens(); track token.id) {
                     @if (token.type !== 'item') {
@@ -295,7 +295,7 @@ import { MatIconModule } from '@angular/material/icon';
                                [value]="token.initiative !== undefined ? token.initiative : ''"
                                (change)="updateInitiative(token.id, $event)"
                                placeholder="10"
-                               class="w-16 bg-stone-900 border border-stone-600 rounded px-1.5 py-1 text-xs text-center focus:outline-none focus:border-amber-500 font-mono text-amber-500">
+                               class="w-16 bg-stone-900 border border-stone-600 rounded-lg px-1.5 py-1.5 text-xs text-center focus:outline-none focus:border-amber-500 font-mono text-amber-500 font-bold">
                       </div>
                     }
                   }
