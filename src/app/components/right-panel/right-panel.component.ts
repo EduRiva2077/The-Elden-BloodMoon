@@ -8,7 +8,8 @@ import { TokenCondition, CharacterSheet } from '../../models/token';
 import { MatIconModule } from '@angular/material/icon';
 import { CommonModule } from '@angular/common';
 import { ActionMenuComponent } from '../action-menu/action-menu.component';
-import { ActionResult } from '../../services/dnd-core-engine.service';
+import { ActionResult, DndCoreEngineService } from '../../services/dnd-core-engine.service';
+import { COMPENDIUM_WEAPONS, COMPENDIUM_SPELLS } from '../../data/compendium.data';
 
 @Component({
   selector: 'app-right-panel',
@@ -274,6 +275,25 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                     <mat-icon style="font-size: 14px; width: 14px; height: 14px;">close</mat-icon>
                   </button>
                 </div>
+                
+                @if (!editingAbilityId() && category === 'weapon' && filteredCompendiumWeapons().length > 0) {
+                  <select class="w-full bg-stone-900 border border-amber-600/50 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500 text-amber-500 mb-1" (change)="onCompendiumSelect($event, 'weapon')">
+                    <option value="">-- Importar Arma do Compêndio (Proficientes) --</option>
+                    @for (w of filteredCompendiumWeapons(); track w.id) {
+                      <option [value]="w.id">{{ w.name }} ({{ w.damage }} {{ w.damageType }})</option>
+                    }
+                  </select>
+                }
+                
+                @if (!editingAbilityId() && category === 'spell' && filteredCompendiumSpells().length > 0) {
+                  <select class="w-full bg-stone-900 border border-blue-600/50 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 text-blue-400 mb-1" (change)="onCompendiumSelect($event, 'spell')">
+                    <option value="">-- Importar Magia do Compêndio ({{ selectedToken()?.sheet?.class || 'Classe' }}) --</option>
+                    @for (s of filteredCompendiumSpells(); track s.id) {
+                      <option [value]="s.id">{{ s.name }} (Nível {{ s.level }})</option>
+                    }
+                  </select>
+                }
+
                 <form [formGroup]="abilityForm" (ngSubmit)="addAbility()" class="space-y-2">
                   <div class="grid grid-cols-2 gap-2">
                     <input formControlName="name" placeholder="Nome" class="w-full bg-stone-900 border border-stone-700 rounded px-2 py-1 text-xs focus:outline-none focus:border-amber-500">
@@ -1556,6 +1576,7 @@ export class RightPanelComponent {
   mathService = inject(DndMathService);
   combat = inject(CombatService);
   auth = inject(AuthService);
+  engine = inject(DndCoreEngineService);
 
   Math = Math;
 
@@ -1647,6 +1668,61 @@ export class RightPanelComponent {
   showHealingField = signal<boolean>(false);
   showAddAbilityForm = signal<boolean>(false);
   editingAbilityId = signal<string | null>(null);
+
+  filteredCompendiumWeapons = computed(() => {
+    const token = this.selectedToken();
+    if (!token?.sheet) return [];
+    return COMPENDIUM_WEAPONS.filter(w => this.engine.isProficientWithWeapon(token.sheet as any, w as any));
+  });
+
+  filteredCompendiumSpells = computed(() => {
+    const token = this.selectedToken();
+    if (!token?.sheet?.class) return [];
+    const charClass = token.sheet.class;
+    return COMPENDIUM_SPELLS.filter(s => s.classes.some(c => c.toLowerCase() === charClass.toLowerCase()));
+  });
+
+  onCompendiumSelect(event: Event, category: string) {
+    const target = event.target as HTMLSelectElement;
+    if (!target.value) return;
+
+    if (category === 'weapon') {
+      const w = COMPENDIUM_WEAPONS.find(x => x.id === target.value);
+      if (w) {
+        this.abilityForm.patchValue({
+          name: w.name,
+          category: 'weapon',
+          type: 'action',
+          range: w.range,
+          damage: w.damage,
+          isProficient: true,
+          description: `Tipo: ${w.weaponType}, Dano: ${w.damageType}. Propriedades: ${w.properties.join(', ')}`
+        });
+        this.showDamageField.set(true);
+        this.showHealingField.set(false);
+      }
+    } else if (category === 'spell') {
+      const s = COMPENDIUM_SPELLS.find(x => x.id === target.value);
+      if (s) {
+        this.abilityForm.patchValue({
+          name: s.name,
+          category: 'spell',
+          type: 'action',
+          range: s.range,
+          damage: s.damage || '',
+          healing: s.healing || '',
+          spellLevel: s.level,
+          description: s.description,
+          areaShape: s.areaShape || 'none'
+        });
+        this.showDamageField.set(!!s.damage);
+        this.showHealingField.set(!!s.healing);
+      }
+    }
+    
+    // Reset dropdown visually
+    target.value = "";
+  }
 
   openAddAbilityForm(category: 'weapon' | 'spell' | 'feature' | 'item_effect') {
     this.editingAbilityId.set(null);
