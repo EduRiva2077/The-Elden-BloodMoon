@@ -60,12 +60,19 @@ import { DND5E_CLASSES, DND5E_RACES, DND5E_ALIGNMENTS, DND5E_BACKGROUNDS, findCl
                   </select>
                 }
                 
-                @if (!editingAbilityId() && category === 'spell' && filteredCompendiumSpells().length > 0) {
+                @if (!editingAbilityId() && category === 'spell') {
                   <select class="w-full bg-stone-900 border border-blue-600/50 rounded px-2 py-1 text-xs focus:outline-none focus:border-blue-500 text-blue-400 mb-1" (change)="onCompendiumSelect($event, 'spell')">
-                    <option value="">-- Importar Magia do Compêndio ({{ selectedToken()?.sheet?.class || 'Classe' }}) --</option>
-                    @for (s of filteredCompendiumSpells(); track s.id) {
-                      <option [value]="s.id">{{ s.name }} (Nível {{ s.level }})</option>
-                    }
+                    <option value="">-- Importar Magia do Compêndio --</option>
+                    <optgroup label="Truques (Nível 0)">
+                      @for (s of compendiumSpellsCantrips(); track s.id) {
+                        <option [value]="s.id">{{ s.name }}{{ s.damage ? ' (' + s.damage + ')' : '' }}</option>
+                      }
+                    </optgroup>
+                    <optgroup label="Nível 1">
+                      @for (s of compendiumSpellsLevel1(); track s.id) {
+                        <option [value]="s.id">{{ s.name }}{{ s.damage ? ' (' + s.damage + ')' : s.healing ? ' (Cura: ' + s.healing + ')' : '' }}</option>
+                      }
+                    </optgroup>
                   </select>
                 }
 
@@ -1611,12 +1618,8 @@ export class RightPanelComponent {
   compendiumWeaponsSimple = computed(() => COMPENDIUM_WEAPONS.filter(w => w.weaponType === 'simple'));
   compendiumWeaponsMartial = computed(() => COMPENDIUM_WEAPONS.filter(w => w.weaponType === 'martial'));
 
-  filteredCompendiumSpells = computed(() => {
-    const token = this.selectedToken();
-    if (!token?.sheet?.class) return [];
-    const charClass = token.sheet.class;
-    return COMPENDIUM_SPELLS.filter(s => s.classes.some(c => c.toLowerCase() === charClass.toLowerCase()));
-  });
+  compendiumSpellsCantrips = computed(() => COMPENDIUM_SPELLS.filter(s => s.level === 0));
+  compendiumSpellsLevel1 = computed(() => COMPENDIUM_SPELLS.filter(s => s.level === 1));
 
   onCompendiumSelect(event: Event, category: string) {
     const target = event.target as HTMLSelectElement;
