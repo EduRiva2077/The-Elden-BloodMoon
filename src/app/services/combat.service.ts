@@ -7,6 +7,7 @@ import { ItemToken } from '../models/item-token';
 import { TokenCondition } from '../models/token';
 import { CampaignService } from './campaign.service';
 import { Scene } from '../models/campaign';
+import { LevelUpService } from './level-up.service';
 
 export const AVAILABLE_CONDITIONS: TokenCondition[] = [
   { id: 'fire', name: 'Fogo', icon: 'local_fire_department', color: '#ef4444' },
@@ -71,6 +72,7 @@ export class CombatService {
   private engine = inject(DndCoreEngineService);
   private mathService = inject(DndMathService);
   private campaignService = inject(CampaignService);
+  public levelUpService = inject(LevelUpService);
   
   private currentCampaignId: string | null = null;
 
@@ -336,6 +338,7 @@ export class CombatService {
       if (t.id !== id) return t;
       
       const oldHp = t.hp;
+      const oldXp = t.sheet?.xp || 0;
       const updatedToken = { ...t, ...updates };
       
       // Sync HP/MP to sheet if they were updated
@@ -344,6 +347,14 @@ export class CombatService {
         if ('maxHp' in updates) updatedToken.sheet.maxHp = updates.maxHp!;
         if ('spellUses' in updates) updatedToken.sheet.spellUses = updates.spellUses!;
         if ('maxSpellUses' in updates) updatedToken.sheet.maxSpellUses = updates.maxSpellUses!;
+      }
+
+      // Check level up if xp changed
+      if (updatedToken.type === 'player' && updatedToken.sheet && updatedToken.sheet.xp > oldXp) {
+        const result = this.checkLevelUp(updatedToken.sheet, updatedToken.name);
+        updatedToken.sheet = result.sheet;
+        updatedToken.hp = result.sheet.hp;
+        updatedToken.maxHp = result.sheet.maxHp;
       }
 
       // Check for token death to distribute XP (any non-player with XP)
@@ -425,13 +436,21 @@ export class CombatService {
       const hitDie = sheet.hitDie || 10;
       
       // Aplicando Média Arredondada Para Cima + Modificador de CON no level up progressivo. 
-      // (isRolled poderia vir de config, ms usando por agora regra da média como padrão de VTT)
+      // (isRolled poderia vir de config, mas usando por agora regra da média como padrão de VTT)
       const hpGain = this.mathService.calculateMaxHpGain(hitDie, conMod, false, false);
       
       sheet.maxHp += hpGain;
       sheet.hp = sheet.maxHp; // Heal on level up
 
       this.addNotification(`Parabéns! ${charName} evoluiu para o nível ${currentLevel}!`, 'level-up');
+      if (this.levelUpService) {
+        this.levelUpService.triggerLevelUp({
+          tokenId: 'temp', // We might need the token id, but only name and level are used currently
+          characterName: charName,
+          previousLevel: currentLevel - 1,
+          newLevel: currentLevel
+        });
+      }
       
       // Attribute Increase Notification
       if ([4, 8, 12, 16, 19].includes(currentLevel)) {
@@ -509,15 +528,20 @@ export class CombatService {
     if (existingIndex > -1) {
       inventory[existingIndex] = { 
         ...inventory[existingIndex], 
-        quantity: inventory[existingIndex].quantity + qty 
+        quantity: (inventory[existingIndex].quantity || 0) + qty 
       };
     } else {
-      inventory.push({
+      // Need to cast or provide required properties for ItemTemplate
+      const newItem: any = {
+        id: Math.random().toString(36).substr(2, 9),
         name: item.name,
+        description: 'Item coletado',
+        itemCategory: 'MISC',
         quantity: qty,
         weight: wt,
         isEquipped: false
-      });
+      };
+      inventory.push(newItem);
     }
     
     sheet.inventory = inventory;

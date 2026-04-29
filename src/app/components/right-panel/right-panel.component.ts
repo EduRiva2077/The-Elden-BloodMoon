@@ -347,6 +347,19 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                          <input type="checkbox" formControlName="isOffHand" class="accent-amber-500 w-4 h-4">
                          Ataque Secundário / Off-hand (Ignora modificador de atributo no dano)
                        </label>
+                       
+                       <div class="flex flex-col gap-1 mt-1">
+                         <label for="scalingAttribute" class="text-[10px] text-stone-500 uppercase">Atributo Escalável (Para Rolagem & Dano)</label>
+                         <select id="scalingAttribute" formControlName="scalingAttribute" class="bg-stone-800 border border-stone-600 rounded px-2 py-1 text-xs text-stone-300 focus:outline-none focus:border-amber-500">
+                           <option value="none">Nenhum</option>
+                           <option value="str">Força (STR)</option>
+                           <option value="dex">Destreza (DEX)</option>
+                           <option value="con">Constituição (CON)</option>
+                           <option value="int">Inteligência (INT)</option>
+                           <option value="wis">Sabedoria (WIS)</option>
+                           <option value="cha">Carisma (CHA)</option>
+                         </select>
+                       </div>
                     </div>
                   }
 
@@ -439,6 +452,9 @@ import { ActionResult } from '../../services/dnd-core-engine.service';
                               <span class="font-bold text-amber-500 text-sm">{{ ability.name }}</span>
                               @if (ability.isProficient !== false) {
                                 <mat-icon class="text-amber-500" style="font-size: 14px; width: 14px; height: 14px;" title="Proficiente">star</mat-icon>
+                              }
+                              @if (ability.isOffHand) {
+                                <span class="bg-stone-900 border border-stone-600 text-[10px] text-stone-400 font-bold px-1 rounded uppercase">Off-hand</span>
                               }
                               @if (ability.isOffHand) {
                                 <span class="bg-stone-900 border border-stone-600 text-[10px] text-stone-400 font-bold px-1 rounded uppercase">Off-hand</span>
@@ -1674,6 +1690,7 @@ export class RightPanelComponent {
       attackBonus: ability.attackBonus || 0,
       isProficient: ability.isProficient !== undefined ? ability.isProficient : true,
       isOffHand: ability.isOffHand || false,
+      scalingAttribute: ability.scalingAttribute || 'none',
       category: ability.category || 'feature',
       spellLevel: ability.spellLevel || 0,
       uses: ability.uses || 0,
@@ -1735,6 +1752,7 @@ export class RightPanelComponent {
     attackBonus: new FormControl(0, { nonNullable: true }),
     isProficient: new FormControl(true, { nonNullable: true }),
     isOffHand: new FormControl(false, { nonNullable: true }),
+    scalingAttribute: new FormControl<'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha' | 'none'>('str', { nonNullable: true }),
     category: new FormControl<'weapon' | 'spell' | 'feature' | 'item_effect'>('feature', { nonNullable: true }),
     spellLevel: new FormControl(0, { nonNullable: true }),
     uses: new FormControl(0, { nonNullable: true }),
@@ -1836,7 +1854,7 @@ export class RightPanelComponent {
 
   maxCapacity = computed(() => {
     const str = this.selectedToken()?.sheet?.str || 10;
-    return str * 7.5; // Aproximadamente 15 lbs por ponto de força = 7.5 kg
+    return str * 15; // Regra oficial de D&D 5e: Força x 15
   });
 
   toggleEquipItem(itemName: string) {
@@ -1863,8 +1881,9 @@ export class RightPanelComponent {
     const item = inventory[index];
     
     // Diminui a quantidade ou remove se chegar a zero
-    if (item.quantity > 1) {
-      inventory[index] = { ...item, quantity: item.quantity - 1 };
+    const itemQuantity = item.quantity || 1;
+    if (itemQuantity > 1) {
+      inventory[index] = { ...item, quantity: itemQuantity - 1 };
     } else {
       inventory.splice(index, 1);
     }

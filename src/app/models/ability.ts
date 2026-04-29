@@ -22,6 +22,9 @@ export interface Ability {
   isOffHand?: boolean; // Off-hand attacks do NOT add positive ability modifiers to damage
   
   category?: 'weapon' | 'spell' | 'feature' | 'item_effect';
+  scalingAttribute?: 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha' | 'none';
+  itemCategory?: string; // Links back to ItemCategory if relevant
+  
   properties?: string[]; // e.g., ['finesse', 'ranged', 'heavy']
   spellLevel?: number;
   uses?: number;

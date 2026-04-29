@@ -1,4 +1,5 @@
 import { Ability } from './ability';
+import { ItemTemplate } from './item';
 
 export interface CharacterSheet {
   class: string;
@@ -36,7 +37,7 @@ export interface CharacterSheet {
   gp?: number;
   pp?: number;
   backpack?: string;
-  inventory?: { name: string; quantity: number; weight: number; isEquipped: boolean }[];
+  inventory?: ItemTemplate[];
 }
 
 export interface TokenCondition {

@@ -13,16 +13,23 @@ import { ItemInteractionModalComponent } from '../item-interaction-modal/item-in
 
 import { AttackModalComponent } from '../attack-modal/attack-modal.component';
 import { DamageModalComponent } from '../damage-modal/damage-modal.component';
+import { LevelUpModalComponent } from '../level-up-modal/level-up-modal.component';
 
 import { CombatTrackerComponent } from '../combat-tracker/combat-tracker.component';
 
 @Component({
   selector: 'app-layout',
   standalone: true,
-  imports: [GridComponent, GmPanelComponent, RightPanelComponent, BottomBarComponent, StorySlidesComponent, SceneFilmstripComponent, MatIconModule, CommonModule, ItemInteractionModalComponent, AttackModalComponent, DamageModalComponent, CombatTrackerComponent],
+  imports: [GridComponent, GmPanelComponent, RightPanelComponent, BottomBarComponent, StorySlidesComponent, SceneFilmstripComponent, MatIconModule, CommonModule, ItemInteractionModalComponent, AttackModalComponent, DamageModalComponent, LevelUpModalComponent, CombatTrackerComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="flex flex-col h-screen w-screen overflow-hidden bg-black text-stone-200 font-sans">
+      
+      <!-- Modals -->
+      <app-attack-modal></app-attack-modal>
+      <app-damage-modal></app-damage-modal>
+      <app-item-interaction-modal></app-item-interaction-modal>
+      <app-level-up-modal></app-level-up-modal>
       
       <!-- Main Content Area -->
       <div class="flex flex-1 overflow-hidden relative">
@@ -81,11 +88,6 @@ import { CombatTrackerComponent } from '../combat-tracker/combat-tracker.compone
           </div>
         }
       </div>
-
-      <!-- Modals -->
-      <app-item-interaction-modal></app-item-interaction-modal>
-      <app-attack-modal></app-attack-modal>
-      <app-damage-modal></app-damage-modal>
     </div>
   `
 })
