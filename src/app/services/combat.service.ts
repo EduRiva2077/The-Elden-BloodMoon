@@ -422,7 +422,7 @@ export class CombatService {
     this.saveToCampaign();
   }
 
-  private checkLevelUp(sheet: CharacterSheet, charName: string): { sheet: CharacterSheet, leveledUp: boolean } {
+  checkLevelUp(sheet: CharacterSheet, charName: string): { sheet: CharacterSheet, leveledUp: boolean } {
     let currentLevel = sheet.level;
     let leveledUp = false;
 

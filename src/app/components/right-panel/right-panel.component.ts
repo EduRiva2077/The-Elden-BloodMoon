@@ -2264,7 +2264,9 @@ export class RightPanelComponent {
     const token = this.selectedToken();
     if (!token) return;
 
-    const sheetData = this.sheetForm.getRawValue();
+    let sheetData = this.sheetForm.getRawValue();
+    const levelUpResult = this.combat.checkLevelUp(sheetData, token.name);
+    sheetData = levelUpResult.sheet;
     this.combat.updateToken(token.id, { 
       sheet: sheetData,
       hp: sheetData.hp,
