@@ -126,6 +126,21 @@ export class CombatService {
     ability: Ability;
   } | null>(null);
 
+  // Level Up Modal State
+  levelUpModalState = signal<{
+    characterName: string;
+    newLevel: number;
+    sheet: CharacterSheet;
+  } | null>(null);
+
+  openLevelUpModal(characterName: string, newLevel: number, sheet: CharacterSheet) {
+    this.levelUpModalState.set({ characterName, newLevel, sheet });
+  }
+
+  closeLevelUpModal() {
+    this.levelUpModalState.set(null);
+  }
+
   openAttackModal(attacker: Token, targets: Token | Token[], ability: Ability) {
     const targetArray = Array.isArray(targets) ? targets : [targets];
     this.attackModalState.set({ attacker, targets: targetArray, ability });
@@ -438,6 +453,10 @@ export class CombatService {
       if ([4, 8, 12, 16, 19].includes(currentLevel)) {
         this.addNotification(`${charName} ganhou um Aumento de Atributo ou Talento no nível ${currentLevel}!`, 'info');
       }
+    }
+
+    if (leveledUp) {
+      this.openLevelUpModal(charName, currentLevel, sheet);
     }
 
     return { sheet, leveledUp };
